@@ -1,0 +1,1303 @@
+{
+	"info": {
+		"_postman_id": "9d3287d8-aab4-46a6-b8d8-2e981b8f0c1f",
+		"name": "Fandit API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17588106"
+	},
+	"item": [
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "api-key",
+								"value": "2f8abdf6-0b87-4502-9c1d-79c52794e3fc",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@fandit.es\",\n  \"password\": \"12345678\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/login/",
+							"protocol": "https",
+							"host": [
+                "sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Current",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4e0081836c0bf8d1a23e8d8bcbc92cbe4f4336bf",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/current/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"current",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List users",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 7d45eac2a29e80825db819e2f37d7096c2377869",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 7d45eac2a29e80825db819e2f37d7096c2377869",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/2328",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"2328"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User interests",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 7d45eac2a29e80825db819e2f37d7096c2377869",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/data-filters/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"data-filters",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 7d45eac2a29e80825db819e2f37d7096c2377869",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user@fandit.es\",\n  \"password\": \"12345678\",\n  \"email\": \"user@fandit.es\",\n  \"first_name\": \"\",\n  \"last_name\": \"\",\n  \"general_notifications\": true,\n  \"distributor\": \"\",\n  \"business_name\": \"\",\n  \"phone\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 7952475eb39c67a88ec2a7bde5126af5",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"Nombre cambiado\",\n  \"last_name\": \"Apellido cambiado\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/157/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"157",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 5091fa2648e039cf12d6da4e7cef94eb",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/users/157/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"157",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Expertos",
+			"item": [
+				{
+					"name": "Expert login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@fandit.es\",\n  \"password\": \"12345678\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/experts/login",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"experts",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Expert current",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 7454b194cb677f3289d0659f3a5ffc5e",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/experts/current/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"experts",
+								"current",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Expedientes",
+			"item": [
+				{
+					"name": "Expedients lists",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 7454b194cb677f3289d0659f3a5ffc5e",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get expedient",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/478",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								"478"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get templates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken a76854f84379ffcb339d350913757a7f",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/templates/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"templates",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create expedient",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken a76854f84379ffcb339d350913757a7f",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"applicant_email\": \"user@fandit.es\",\n  \"applicant_name\": \"Nombre de solicitante\",\n  \"title\": \"Expediente desde postman con plantilla\",\n  \"template\": \"6c4f0b32-725c-4762-b805-6f7923e4a65b\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import expedients",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken f2b60d836cdb01ff3b0b341e1e94c26f",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "./nuevo-formato-importacion-listado-de-tramitaciones.xlsx"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/experts/list-import/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"experts",
+								"list-import",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Status list",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/status-groups-list/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								"status-groups-list",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workflows\": [477],\n  \"new_status_group\": 2,\n  \"new_status\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/update-status/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								"update-status",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update custom form (delete, archive, restaure)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workflows\": [477],\n  \"action\": \"archive\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/update/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								"update",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign expert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workflows\": [476],\n  \"expert_id\": 67\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/forms/expert-assign/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"forms",
+								"expert-assign",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Leads",
+			"item": [
+				{
+					"name": "Leads list",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get lead",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/14",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"14"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Leads stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/stats/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"stats",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create lead",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"lead desde postman\",\n  \"email\": \"user@fandit.es\",\n  \"company_name\": \"prueba\",\n  \"phone\": \"\",\n  \"province\": 15,\n  \"priority\": 1,\n  \"status\": 1,\n  \"notes\" : \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update lead",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notes\" : \"Actualizado desde postman\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/16/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"16",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update leads",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leads\": [16],\n  \"status\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/bulk-update/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"bulk-update",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign leads",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leads\": [15],\n  \"expert\": 67\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/assign-leads/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"assign-leads",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update visibility",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leads\": [15],\n  \"action\": \"archive\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/update-visibility/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"update-visibility",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar leads",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "ExpertToken 8920ef04cb187ec7a90b15165dbb726a",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leads\": [15]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/leads/bulk-delete/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"leads",
+								"bulk-delete",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subvenciones",
+			"item": [
+				{
+					"name": "Funds List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4b7e374e04538b28b16e401108034eb6",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/funds/?page=1&requestData={\"is_open\":true,\"search_by_text\":null,\"max_budget\":null,\"max_total_amount\":null,\"min_total_amount\":null, \"bdns\":null,\"office\":\"\",\"start_date\":\"2024-01-01\",\"end_date\":\"2024-12-31\",\"final_period_end_date\":\"2024-12-31\",\"final_period_start_date\":\"2024-01-01\", \"search_tab\":null,\"province\":[],\"applicants\":[],\"communities\":[],\"action_items\":[],\"origins\":[],\"activities\":[],\"region_types\":[],\"types\":[] }",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"funds",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "requestData",
+									"value": "{\"is_open\":true,\"search_by_text\":null,\"max_budget\":null,\"max_total_amount\":null,\"min_total_amount\":null, \"bdns\":null,\"office\":\"\",\"start_date\":\"2024-01-01\",\"end_date\":\"2024-12-31\",\"final_period_end_date\":\"2024-12-31\",\"final_period_start_date\":\"2024-01-01\", \"search_tab\":null,\"province\":[],\"applicants\":[],\"communities\":[],\"action_items\":[],\"origins\":[],\"activities\":[],\"region_types\":[],\"types\":[] }"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fund Concessions List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4b7e374e04538b28b16e401108034eb6",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/funds/concessions/?page=1&requestData={\"is_open\":true,\"search_by_text\":null,\"max_total_amount\":null,\"min_total_amount\":null, \"bdns\":null,\"office\":\"\",\"start_date\":\"2024-01-01\",\"end_date\":\"2024-12-31\",\"final_period_end_date\":\"2024-12-31\",\"final_period_start_date\":\"2024-01-01\", \"search_tab\":null,\"province\":[],\"applicants\":[],\"communities\":[],\"action_items\":[],\"origins\":[],\"activities\":[],\"region_types\":[],\"types\":[] }",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"funds",
+								"concessions",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "requestData",
+									"value": "{\"is_open\":true,\"search_by_text\":null,\"max_total_amount\":null,\"min_total_amount\":null, \"bdns\":null,\"office\":\"\",\"start_date\":\"2024-01-01\",\"end_date\":\"2024-12-31\",\"final_period_end_date\":\"2024-12-31\",\"final_period_start_date\":\"2024-01-01\", \"search_tab\":null,\"province\":[],\"applicants\":[],\"communities\":[],\"action_items\":[],\"origins\":[],\"activities\":[],\"region_types\":[],\"types\":[] }"
+								},
+								{
+									"key": "nif",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Concessions Beneficiaries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4b7e374e04538b28b16e401108034eb6",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/funds/concessions/beneficiaries/?page=1&requestData={\"nif\":\"\"}&fund_slug=subvención-directa-por-convenio-2023",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"funds",
+								"concessions",
+								"beneficiaries",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "requestData",
+									"value": "{\"nif\":\"\"}"
+								},
+								{
+									"key": "fund_slug",
+									"value": "subvención-directa-por-convenio-2023"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Opportunities by client data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4b7e374e04538b28b16e401108034eb6",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "province",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "cnae",
+									"value": "123456",
+									"type": "text"
+								},
+								{
+									"key": "nif",
+									"value": "Y123456789Y",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/funds/opportunities/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"funds",
+								"opportunities",
+								""
+							],
+							"query": [
+								{
+									"key": "nif",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fund Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token 4b7e374e04538b28b16e401108034eb6",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://sandbox.api.test.fandit.es/api/v2/fund-details/ayudas-destinadas-a-ecosistemas-de-innovacion-en-el-marco-del-plan-estatal-de-investigacion-cientifica-y-tecnica-y-de-innovacion-2024/",
+							"protocol": "https",
+							"host": [
+								"sandbox",
+								"api",
+								"test",
+								"fandit",
+								"es"
+							],
+							"path": [
+								"api",
+								"v2",
+								"fund-details",
+								"ayudas-destinadas-a-ecosistemas-de-innovacion-en-el-marco-del-plan-estatal-de-investigacion-cientifica-y-tecnica-y-de-innovacion-2024",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
