@@ -18,4 +18,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Ejecutar el script
-CMD ["python", "etl_script.py"]
+CMD ["python", "etl_api.py"]
