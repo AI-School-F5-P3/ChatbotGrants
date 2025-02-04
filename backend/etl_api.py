@@ -26,28 +26,28 @@ load_dotenv()
 
 @dataclass
 class DatabaseConfig:
-    host: str = os.getenv('DB_HOST', 'localhost')
-    database: str = os.getenv('DB_NAME', 'fandit_db')
-    user: str = os.getenv('DB_USER', 'postgres')
-    password: str = os.getenv('DB_PASSWORD', '')
-    port: str = os.getenv('DB_PORT', '5432')
+    host: str = os.getenv('DB_HOST')
+    database: str = os.getenv('DB_NAME')
+    user: str = os.getenv('DB_USER')
+    password: str = os.getenv('DB_PASSWORD')
+    port: str = os.getenv('DB_PORT')
 
 class FanditAPI:
-    def __init__(self, token: str, api_key: str = "2f8abdf6-0b87-4502-9c1d-79c52794e3fc", base_url: str = "https://sandbox.api.test.fandit.es/api/v2"):
+    def __init__(self, expert_token: str, api_key: str, base_url: str = os.getenv('FANDIT_BASE_URL')):
         self.base_url = base_url
         self.session = requests.Session()
         self.session.headers.update({
             'Accept': 'application/json',
-            'Authorization': f'ExpertToken {token}',  # Cambiado a ExpertToken
-            'api-key': api_key,
-            'Content-Type': 'application/json'  # Agregado Content-Type
+            'Content-Type': 'application/json',
+            'Authorization': f'ExpertToken {expert_token}',
+            'api-key': api_key
         })
-        logger.info(f"Headers configurados: {self.session.headers}")
+        logger.info("API inicializada")
 
     def get_funds(self, params: Optional[Dict] = None) -> List[Dict]:
         """Obtener lista de fondos con parámetros opcionales de filtrado"""
         try:
-            # Parámetros por defecto
+            # Parámetros por defecto para la búsqueda
             default_params = {
                 "is_open": True,
                 "search_by_text": None,
@@ -56,10 +56,10 @@ class FanditAPI:
                 "min_total_amount": None,
                 "bdns": None,
                 "office": "",
-                "start_date": "2024-01-01",
-                "end_date": "2024-12-31",
-                "final_period_end_date": "2024-12-31",
-                "final_period_start_date": "2024-01-01",
+                "start_date": datetime.now().strftime("%Y-01-01"),
+                "end_date": datetime.now().strftime("%Y-12-31"),
+                "final_period_end_date": datetime.now().strftime("%Y-12-31"),
+                "final_period_start_date": datetime.now().strftime("%Y-01-01"),
                 "search_tab": None,
                 "provinces": [],
                 "applicants": [],
@@ -71,36 +71,28 @@ class FanditAPI:
                 "types": []
             }
 
-            # Actualizar con parámetros proporcionados
             if params:
                 default_params.update(params)
 
-            # Construir URL con parámetros
             query_params = {
                 "page": 1,
                 "requestData": json.dumps(default_params)
             }
 
-            logger.info(f"Realizando petición a {self.base_url}/funds/")
-            logger.info(f"Parámetros: {query_params}")
-
+            logger.info("Realizando petición a la API de Fandit")
             response = self.session.get(
                 f"{self.base_url}/funds/",
                 params=query_params
             )
             
-            logger.info(f"URL completa: {response.url}")
             logger.info(f"Status code: {response.status_code}")
-            
             response.raise_for_status()
+            
             data = response.json()
-            logger.info(f"Datos recibidos: {str(data)[:200]}...")  # Log primeros 200 caracteres
-            return data
+            return data.get('results', [])  # Asumimos que la respuesta tiene una key 'results'
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error en la petición a la API de Fandit: {str(e)}")
-            if response := getattr(e, 'response', None):
-                logger.error(f"Respuesta del servidor: {response.text}")
+            logger.error(f"Error en la petición a la API: {str(e)}")
             raise
 
 class PostgresDB:
@@ -139,24 +131,43 @@ class PostgresDB:
 
     def __init__(self, config: DatabaseConfig):
         self.config = config
+        self._create_database_if_not_exists()
         self.create_tables()
 
-    def create_tables(self):
-        """Crear la base de datos si no existe y las tablas necesarias"""
+    def _create_database_if_not_exists(self):
+        """Crear la base de datos si no existe"""
         try:
-            logger.info(f"Intentando conectar a la base de datos en {self.config.host}")
+            # Conectar a postgres para poder crear la base de datos
+            conn = psycopg2.connect(
+                host=self.config.host,
+                user=self.config.user,
+                password=self.config.password,
+                database='postgres'
+            )
+            conn.autocommit = True
+
+            with conn.cursor() as cur:
+                # Verificar si la base de datos existe
+                cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (self.config.database,))
+                if not cur.fetchone():
+                    cur.execute(f'CREATE DATABASE {self.config.database}')
+                    logger.info(f"Base de datos {self.config.database} creada")
+            conn.close()
+        except Exception as e:
+            logger.error(f"Error creando la base de datos: {str(e)}")
+            raise
+
+    def create_tables(self):
+        """Crear las tablas necesarias"""
+        try:
             conn = psycopg2.connect(**self.config.__dict__)
-            logger.info("Conexión exitosa a la base de datos")
-            
             with conn:
                 with conn.cursor() as cur:
-                    logger.info("Creando tablas...")
                     cur.execute(self.CREATE_FUNDS_TABLE_SQL)
-                conn.commit()
+            conn.close()
             logger.info("Tablas creadas exitosamente")
         except Exception as e:
             logger.error(f"Error creando las tablas: {str(e)}")
-            logger.error(f"Configuración de BD: {self.config}")
             raise
 
     def upsert_fund(self, fund: Dict, details: Dict):
@@ -169,10 +180,8 @@ class PostgresDB:
             provinces, applicants, communities, action_items,
             origins, activities, region_types, types, details,
             updated_at
-        ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP
-        )
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                 %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
         ON CONFLICT (fund_id) DO UPDATE SET
             is_open = EXCLUDED.is_open,
             search_by_text = EXCLUDED.search_by_text,
@@ -226,81 +235,68 @@ class PostgresDB:
                         json.dumps(details)
                     )
                     cur.execute(upsert_query, values)
-                conn.commit()
-            logger.info(f"Fondo {fund.get('id')} actualizado exitosamente")
+            logger.info(f"Fondo {fund.get('id')} procesado exitosamente")
         except Exception as e:
-            logger.error(f"Error actualizando el fondo {fund.get('id')}: {str(e)}")
+            logger.error(f"Error procesando fondo: {str(e)}")
             raise
 
 class FanditETL:
     def __init__(self, api: FanditAPI):
-        """
-        Inicializa el ETL
-        Args:
-            api (FanditAPI): Instancia de la API de Fandit
-        """
         self.api = api
         self.db = PostgresDB(DatabaseConfig())
-        logger.info("FanditETL inicializado")
+        logger.info("ETL inicializado")
 
     def run_etl(self):
         """Ejecutar el proceso ETL completo"""
         try:
             logger.info("Iniciando proceso ETL")
-            
-            # Obtener fondos de la API
             funds = self.api.get_funds()
             
             if not funds:
                 logger.warning("No se encontraron fondos")
                 return
 
-            logger.info(f"Obtenidos {len(funds)} fondos")
-            
-            # Almacenar cada fondo en la base de datos
+            logger.info(f"Procesando {len(funds)} fondos")
             for fund in funds:
                 try:
                     self.db.upsert_fund(fund, fund)
-                    logger.info(f"Fondo {fund.get('id')} procesado exitosamente")
                 except Exception as e:
-                    logger.error(f"Error procesando fondo {fund.get('id')}: {str(e)}")
+                    logger.error(f"Error procesando fondo: {str(e)}")
                     continue
+                time.sleep(0.5)  # Evitar sobrecarga de la API
                 
-                # Pequeña pausa para no sobrecargar la API
-                time.sleep(0.5)
-            
-            logger.info("Proceso ETL completado exitosamente")
-            
+            logger.info("Proceso ETL completado")
         except Exception as e:
             logger.error(f"Error en el proceso ETL: {str(e)}")
             raise
 
 def main():
-    """Función principal que configura y ejecuta el ETL programado"""
-    load_dotenv()
-    
-    # Usar el token y api_key
-    token = os.getenv('FANDIT_TOKEN', '4b7e374e04538b28b16e401108034eb6')
-    api_key = os.getenv('FANDIT_API_KEY', '2f8abdf6-0b87-4502-9c1d-79c52794e3fc')
-    
-    # Inicializar API
-    api = FanditAPI(token=token, api_key=api_key)
-    
-    # Inicializar ETL
-    etl = FanditETL(api)
-    
-    logger.info("Iniciando el servicio ETL")
-    
-    # Ejecutar inmediatamente la primera vez
-    etl.run_etl()
-    
-    # Programar la ejecución diaria a las 13:00
-    schedule.every().day.at("13:00").do(etl.run_etl)
-    
-    # Mantener el script corriendo
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
+    try:
+        # Cargar credenciales
+        expert_token = os.getenv('FANDIT_EXPERT_TOKEN')
+        api_key = os.getenv('FANDIT_API_KEY')
+
+        if not all([expert_token, api_key]):
+            raise ValueError("Faltan credenciales de la API en las variables de entorno")
+
+        # Inicializar servicios
+        api = FanditAPI(expert_token=expert_token, api_key=api_key)
+        etl = FanditETL(api)
+        
+        # Ejecutar ETL
+        logger.info("Iniciando servicio ETL")
+        etl.run_etl()
+        
+        # Programar ejecución diaria
+        schedule.every().day.at("13:00").do(etl.run_etl)
+        
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
+
+    except Exception as e:
+        logger.error(f"Error en la aplicación: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()
