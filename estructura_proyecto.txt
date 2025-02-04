@@ -1,0 +1,14 @@
+project-root/
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── src/
+│   └── ...
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── etl_script.py
+│   └── ...
+├── docker-compose.yml
+├── .env
+└── README.md

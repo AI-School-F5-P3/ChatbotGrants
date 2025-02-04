@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend  # Asumiendo que el Dockerfile del frontend está en la carpeta /frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - fandit-network
+
+  backend:
+    build:
+      context: ./backend  # Asumiendo que el código del ETL está en la carpeta /backend
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-fandit_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_PORT: 5432
+    depends_on:
+      - db
+    networks:
+      - fandit-network
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fandit_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - fandit-network
+
+networks:
+  fandit-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
