@@ -1,0 +1,19 @@
+AWS Step Functions
+    │
+    ├── Lambda Function (ETL)
+    │   ├── Extracción API Fandit
+    │   └── Transformación datos
+    │
+    ├── Aurora MySQL
+    │   └── Almacenamiento datos
+    │
+    └── CloudWatch
+        └── Monitoreo y logs
+
+
+ChatbotGrants/
+├── backend/
+│   ├── db_aurora_setup.py     # Script para crear tabla en Aurora
+│   ├── etl_lambda.py          # Código para la función Lambda
+│   ├── step_functions.json    # Definición del workflow
+│   └── requirements.txt       # Dependencias        
