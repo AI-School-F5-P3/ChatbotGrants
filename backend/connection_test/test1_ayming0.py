@@ -44,7 +44,7 @@ def upload_file_to_s3(file_path, bucket_name, object_name=None):
         print(f"Error uploading file: {str(e)}")
 
 # Usage
-local_file_path = 'backend/test_ak.pdf'
+local_file_path = 'backend/connection_test/test_ak.pdf'
 s3_bucket_name = 'repositorio-grantsbot'
 s3_object_name = 'test_ak.pdf'  # Optional
 
