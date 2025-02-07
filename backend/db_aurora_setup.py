@@ -1,93 +1,99 @@
-import boto3
 import mysql.connector
 import os
 from dotenv import load_dotenv
 import logging
+import socket
 
-logging.basicConfig(
-   level=logging.INFO,
-   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-   handlers=[
-       logging.FileHandler('db_setup.log'),
-       logging.StreamHandler()
-   ]
-)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-class AuroraDBSetup:
-   def __init__(self):
-       self.rds_client = boto3.client('rds',
-           aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-           aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-           region_name=os.getenv('AWS_REGION')
-       )
-       
-       self.CLUSTER_IDENTIFIER = os.getenv('AURORA_CLUSTER_IDENTIFIER')
-       self.DB_NAME = os.getenv('DB_NAME')
-       
-   def create_funds_table(self):
-       CREATE_TABLE_SQL = """
-       CREATE TABLE IF NOT EXISTS funds (
-           id INT AUTO_INCREMENT PRIMARY KEY,
-           fund_id VARCHAR(255) UNIQUE,
-           is_open BOOLEAN,
-           search_by_text TEXT,
-           max_budget DECIMAL(15,2),
-           max_total_amount DECIMAL(15,2),
-           min_total_amount DECIMAL(15,2),
-           bdns TEXT,
-           office TEXT,
-           start_date DATE,
-           end_date DATE,
-           final_period_end_date DATE,
-           final_period_start_date DATE,
-           search_tab INTEGER,
-           provinces JSON,
-           applicants JSON,
-           communities JSON,
-           action_items JSON,
-           origins JSON,
-           activities JSON,
-           region_types JSON,
-           types JSON,
-           details JSON,
-           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-           INDEX idx_fund_is_open (is_open),
-           INDEX idx_fund_dates (start_date, end_date)
-       )
-       """
-       
-       try:
-           response = self.rds_client.describe_db_clusters(
-               DBClusterIdentifier=self.CLUSTER_IDENTIFIER
-           )
-           endpoint = response['DBClusters'][0]['Endpoint']
-           
-           conn = mysql.connector.connect(
-               host=endpoint,
-               user=os.getenv('DB_USER'),
-               password=os.getenv('DB_PASSWORD'),
-               database=self.DB_NAME
-           )
-           
-           with conn.cursor() as cursor:
-               cursor.execute(CREATE_TABLE_SQL)
-               conn.commit()
-               logger.info("Tabla funds creada exitosamente")
-               
-       except Exception as e:
-           logger.error(f"Error creando tabla en Aurora: {str(e)}")
-           raise
-       finally:
-           if 'conn' in locals() and conn.is_connected():
-               conn.close()
+def test_connection():
+    try:
+        # Probar resolución de DNS
+        ip_address = socket.gethostbyname(os.getenv('AURORA_CLUSTER_ENDPOINT'))
+        logger.info(f"IP resuelta: {ip_address}")
 
-def main():
-   setup = AuroraDBSetup()
-   setup.create_funds_table()
+        # Parámetros de conexión
+        conn_params = {
+            'host': os.getenv('AURORA_CLUSTER_ENDPOINT'),
+            'user': os.getenv('DB_USER'),
+            'password': os.getenv('DB_PASSWORD'),
+            'port': 3306,
+            'connect_timeout': 10
+        }
+
+        # Conexión
+        logger.info("Intentando conectar...")
+        conn = mysql.connector.connect(**conn_params)
+        logger.info("Conexión exitosa")
+        
+        # Verificar versión del servidor
+        cursor = conn.cursor()
+        cursor.execute("SELECT VERSION()")
+        version = cursor.fetchone()
+        logger.info(f"Versión del servidor MySQL: {version[0]}")
+
+        cursor.close()
+        conn.close()
+
+    except socket.gaierror as e:
+        logger.error(f"Error de resolución de DNS: {e}")
+    except mysql.connector.Error as err:
+        logger.error(f"Error de conexión MySQL: {err}")
+        if err.errno == mysql.connector.errorcode.CR_CONN_HOST_ERROR:
+            logger.error("No se pudo conectar al host. Verificar endpoint y configuración de red.")
+        elif err.errno == mysql.connector.errorcode.CR_CONN_TIMEOUT:
+            logger.error("La conexión ha excedido el tiempo de espera. Verificar firewall y configuraciones de red.")
+    except Exception as e:
+        logger.error(f"Error inesperado: {e}")
+
+def setup_database():
+    try:
+        # Conectar sin especificar base de datos
+        conn = mysql.connector.connect(
+            host=os.getenv('AURORA_CLUSTER_ENDPOINT'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            port=3306,
+            connect_timeout=10
+        )
+        cursor = conn.cursor()
+
+        # Crear base de datos si no existe
+        cursor.execute("CREATE DATABASE IF NOT EXISTS fandit_db")
+        logger.info("Base de datos creada o verificada")
+        
+        # Cambiar a la base de datos
+        cursor.execute("USE fandit_db")
+        
+        # Crear tabla
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS funds (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            fund_id VARCHAR(255) UNIQUE,
+            name VARCHAR(255),
+            description TEXT,
+            total_amount DECIMAL(10, 2),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        cursor.execute(create_table_sql)
+        logger.info("Tabla funds creada exitosamente")
+        
+        conn.commit()
+        logger.info("Configuración de base de datos completada")
+
+    except mysql.connector.Error as err:
+        logger.error(f"Error en la configuración de la base de datos: {err}")
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
-   main()
+    # Primero probar la conexión
+    test_connection()
+    # Luego configurar la base de datos
+    setup_database()
