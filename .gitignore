@@ -69,3 +69,5 @@ coverage/
 # Otros archivos innecesarios
 *.~*
 *.lock
+
+pruebas/
