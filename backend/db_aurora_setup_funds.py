@@ -18,31 +18,38 @@ def modify_funds_table():
         )
         cursor = conn.cursor()
 
-        # Modificar tabla funds para ajustarla a la estructura de grants_search
-        alter_table_sql = """
-        ALTER TABLE funds 
-        MODIFY COLUMN id INT AUTO_INCREMENT PRIMARY KEY,
-        ADD COLUMN is_open BOOLEAN,
-        ADD COLUMN description TEXT,
-        ADD COLUMN max_budget DECIMAL(15,2),
-        ADD COLUMN total_amount DECIMAL(15,2),
-        ADD COLUMN min_total_amount DECIMAL(15,2),
-        ADD COLUMN bdns VARCHAR(50),
-        ADD COLUMN office VARCHAR(255),
-        ADD COLUMN publication_date DATE,
-        ADD COLUMN end_date DATE,
-        ADD COLUMN search_tab INT,
-        ADD COLUMN applicants JSON,
-        ADD COLUMN action_items JSON,
-        ADD COLUMN origins JSON,
-        ADD COLUMN activities JSON,
-        ADD COLUMN region_types JSON,
-        ADD COLUMN types JSON
-        """
+        # Lista de columnas adicionales a añadir
+        columns_to_add = [
+            "is_open BOOLEAN",
+            "max_budget DECIMAL(15,2)",
+            "bdns VARCHAR(50)",
+            "office VARCHAR(255)",
+            "publication_date DATE",
+            "end_date DATE",
+            "search_tab INT",
+            "applicants JSON",
+            "action_items JSON",
+            "origins JSON",
+            "activities JSON",
+            "region_types JSON",
+            "types JSON"
+        ]
 
-        cursor.execute(alter_table_sql)
+        # Intentar añadir columnas, ignorando errores si ya existen
+        for column in columns_to_add:
+            column_name = column.split()[0]
+            try:
+                alter_column_sql = f"ALTER TABLE funds ADD COLUMN {column}"
+                cursor.execute(alter_column_sql)
+                logger.info(f"Columna añadida: {column}")
+            except mysql.connector.Error as err:
+                if err.errno == 1060:  # Column already exists
+                    logger.info(f"Columna ya existe: {column}")
+                else:
+                    logger.error(f"Error al añadir columna {column}: {err}")
+
         conn.commit()
-        logger.info("Tabla funds modificada exitosamente")
+        logger.info("Modificación de tabla funds completada")
 
     except mysql.connector.Error as err:
         logger.error(f"Error al modificar la tabla: {err}")
