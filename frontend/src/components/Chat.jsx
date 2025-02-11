@@ -19,6 +19,7 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [isSessionActive, setIsSessionActive] = useState(true);
     const messagesEndRef = useRef(null);
 
     // Llamada inicial al endpoint /msg/ cuando la página carga
@@ -44,24 +45,24 @@ const Chat = () => {
     // Manejo del envío de mensajes
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!inputMessage.trim()) return;
-    
+        if (!inputMessage.trim() || !isSessionActive) return;
+
         // Agregar mensaje del usuario
         setMessages((prevMessages) => [
             ...prevMessages,
             { sender: "user", text: inputMessage },
         ]);
-    
+
         // Mostrar el loader como un mensaje vacío del bot
         setIsTyping(true);
         setMessages((prevMessages) => [
             ...prevMessages,
-            { sender: "bot", text: "", isTyping: true } // Mensaje temporal del bot con indicador
+            { sender: "bot", text: "", isTyping: true }, // Mensaje temporal del bot con indicador
         ]);
-    
+
         try {
             const botResponse = await chat(userId, inputMessage);
-    
+
             // Reemplazar el mensaje del loader con la respuesta del bot
             setMessages((prevMessages) =>
                 prevMessages.map((msg, index) =>
@@ -73,11 +74,33 @@ const Chat = () => {
         } catch (error) {
             console.error("Error enviando el mensaje:", error);
         }
-    
+
         setIsTyping(false);
         setInputMessage(""); // Limpiar input después de enviar
     };
-    
+
+    const endSession = async () => {
+        try {
+            await fetch(`${API_URL}/end_session/${userId}`, {
+                method: "DELETE",
+            });
+
+            setIsSessionActive(false); // Marcar la sesión como finalizada
+
+            // Mostrar mensaje de fin de sesión en el chat
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                {
+                    sender: "bot",
+                    text: "🔚 Sesión finalizada. Gracias por usar el chatbot.",
+                },
+            ]);
+
+            console.log("Sesión finalizada");
+        } catch (error) {
+            console.error("Error ending session:", error);
+        }
+    };
 
     return (
         <div className="chat-area flex items-center justify-center w-full">
@@ -182,7 +205,7 @@ const Chat = () => {
                                     />
 
                                     <CardBody
-                                        className={`p-3 rounded-lg max-w-[80%] ${
+                                        className={`p-3 rounded-lg max-w-[100%] ${
                                             msg.sender === "user"
                                                 ? "bg-customLightBlue text-white text-right ml-auto mt-[.1rem]"
                                                 : "bg-white text-left mr-auto mt-[.1rem]"
