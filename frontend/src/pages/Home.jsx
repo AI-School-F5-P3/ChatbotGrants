@@ -31,8 +31,6 @@ function Home() {
     reset(); // Resetear el formulario al montar el componente
   }, [reset]);
 
-  
-
   const onSubmit = async (data) => {
     const { email, password } = data;
 
@@ -66,7 +64,7 @@ function Home() {
   return (
     <>
       <div className="flex items-center justify-center h-[calc(100vh-2rem)] text-white font-lato">
-        <Card color="transparent" shadow={false}>
+        <Card color="transparent" shadow={false} className="border border-custom50Blue p-16 pb-[6rem] rounded-lg">
           <Typography
             variant="h4"
             color="white"

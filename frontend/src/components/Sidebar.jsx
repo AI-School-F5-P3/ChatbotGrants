@@ -23,12 +23,8 @@ export function Sidebar() {
     <Card className="sidebar h-[calc(100vh-7rem)] w-full max-w-[18rem] p-4 shadow-xl shadow-blue-gray-900/5 rounded-none border-r border-solid border-custom10Gray">
       <div className="flex flex-row flex-wrap items-center justify-center p-2 pt-5">
         <Button
-          buttonType="link"
           variant="outlined"
-          ripple="light"
-          rounded={false}
-          block={true}
-          className="hover:bg-customBlue mb-4 border border-customBlue text-customBlue"
+          className="hover:text-white hover:bg-customBlue mb-4 border border-customBlue text-customBlue"
         >
           Nueva conversación
         </Button>
