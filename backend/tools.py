@@ -3,12 +3,29 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 import json
+from decimal import Decimal
+from datetime import datetime, date
+
+# Cargar variables de entorno
+load_dotenv()
+
+# Custom JSON Encoder para manejar tipos no serializables
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
+        # Intentar manejar otros tipos JSON no serializables
+        try:
+            return str(obj)
+        except:
+            return super().default(obj)
 
 class GrantsDatabase:
     def __init__(self):
-        # Cargar variables de entorno
-        load_dotenv()
-        
         # Configuración de conexión
         self.connection_config = {
             'host': os.getenv('AURORA_CLUSTER_ENDPOINT'),
@@ -53,23 +70,21 @@ class GrantsDatabase:
                 """
                 
                 # Si se proporcionan más detalles de usuario, se puede refinar la consulta
-                if user_info:
-                    # Ejemplo de posible refinamiento
-                    conditions = []
-                    params = []
-                    
-                    if 'applicant_type' in user_info:
-                        conditions.append("JSON_CONTAINS(applicants, %s)")
-                        params.append(json.dumps(user_info['applicant_type']))
-                    
-                    if conditions:
-                        query = f"""
-                        SELECT * FROM funds 
-                        WHERE is_open = TRUE 
-                        AND {' AND '.join(conditions)}
-                        ORDER BY total_amount DESC 
-                        LIMIT 3
-                        """
+                conditions = []
+                params = []
+                
+                if user_info and 'applicant_type' in user_info:
+                    conditions.append("JSON_CONTAINS(applicants, %s)")
+                    params.append(json.dumps(user_info['applicant_type']))
+                
+                if conditions:
+                    query = f"""
+                    SELECT * FROM funds 
+                    WHERE is_open = TRUE 
+                    AND {' AND '.join(conditions)}
+                    ORDER BY total_amount DESC 
+                    LIMIT 3
+                    """
                 
                 cursor.execute(query, params if conditions else None)
                 return cursor.fetchall()
@@ -119,20 +134,33 @@ def main():
     print("Subvenciones disponibles:")
     grants = grants_db.load_grants(limit=3)
     for grant in grants:
-        print(json.dumps(grant, indent=2))
+        try:
+            print(json.dumps(grant, indent=2, cls=CustomJSONEncoder))
+        except Exception as e:
+            print(f"Error al serializar subvención: {e}")
+            print("Contenido de la subvención:", grant)
     
     # Probar búsqueda de mejores subvenciones
     print("\nMejores subvenciones:")
     best_grants = grants_db.find_best_grant()
     for grant in best_grants:
-        print(json.dumps(grant, indent=2))
+        try:
+            print(json.dumps(grant, indent=2, cls=CustomJSONEncoder))
+        except Exception as e:
+            print(f"Error al serializar subvención: {e}")
+            print("Contenido de la subvención:", grant)
     
     # Probar obtener detalle de subvención
     if grants:
         bdns = grants[0].get('bdns')
         print(f"\nDetalle de subvención con BDNS {bdns}:")
         detail = grants_db.get_grant_detail(bdns)
-        print(json.dumps(detail, indent=2))
+        if detail:
+            try:
+                print(json.dumps(detail, indent=2, cls=CustomJSONEncoder))
+            except Exception as e:
+                print(f"Error al serializar detalle: {e}")
+                print("Contenido del detalle:", detail)
 
 if __name__ == "__main__":
     main()
