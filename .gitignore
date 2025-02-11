@@ -66,6 +66,9 @@ coverage/
 *.out
 *.so
 
+# Caché de Vite
+.vite/
+
 #Prettier
 .prettierrc.json
 
