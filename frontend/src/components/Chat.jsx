@@ -45,27 +45,39 @@ const Chat = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!inputMessage.trim()) return;
-
-        // Agregar mensaje del usuario al estado
+    
+        // Agregar mensaje del usuario
         setMessages((prevMessages) => [
             ...prevMessages,
             { sender: "user", text: inputMessage },
         ]);
-
+    
+        // Mostrar el loader como un mensaje vacío del bot
         setIsTyping(true);
-
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: "bot", text: "", isTyping: true } // Mensaje temporal del bot con indicador
+        ]);
+    
         try {
-            await chat(userId, inputMessage, setMessages);
+            const botResponse = await chat(userId, inputMessage);
+    
+            // Reemplazar el mensaje del loader con la respuesta del bot
+            setMessages((prevMessages) =>
+                prevMessages.map((msg, index) =>
+                    index === prevMessages.length - 1 && msg.isTyping
+                        ? { sender: "bot", text: botResponse, isTyping: false }
+                        : msg
+                )
+            );
         } catch (error) {
             console.error("Error enviando el mensaje:", error);
         }
-
-        // // Ocultar loader cuando el bot responda
+    
         setIsTyping(false);
-
-        // Limpiar el input después de enviar
-        setInputMessage("");
+        setInputMessage(""); // Limpiar input después de enviar
     };
+    
 
     return (
         <div className="chat-area flex items-center justify-center w-full">
@@ -145,8 +157,8 @@ const Chat = () => {
                                 <span
                                     className={`inline-block flex flex-row max-w-full w-[80%] ${
                                         msg.sender === "user"
-                                            ? "chat-msg flex-row-reverse text-right ml-auto my-4"
-                                            : "chat-msg text-left mr-auto"
+                                            ? "chat-msg min-h-[.5rem] overflow-hidden flex-row-reverse text-right ml-auto my-4"
+                                            : "chat-msg min-h-[.5rem] overflow-hidden  text-left mr-auto"
                                     } break-words`}
                                 >
                                     <Avatar
@@ -180,17 +192,27 @@ const Chat = () => {
                                             msg.text
                                         ) : (
                                             <>
-                                                {isTyping ? (
-                                                    <div className="typing-indicator">
-                                                        <span></span>
-                                                        <span></span>
-                                                        <span></span>
-                                                    </div>
+                                                {msg.sender === "bot" ? (
+                                                    <>
+                                                        {/* Si este es el último mensaje del array y el bot está escribiendo, muestra el typing indicator */}
+                                                        {isTyping &&
+                                                        index ===
+                                                            messages.length -
+                                                                1 ? (
+                                                            <div className="typing-indicator">
+                                                                <span></span>
+                                                                <span></span>
+                                                                <span></span>
+                                                            </div>
+                                                        ) : (
+                                                            <Typewriter
+                                                                text={msg.text}
+                                                                delay={5}
+                                                            />
+                                                        )}
+                                                    </>
                                                 ) : (
-                                                    <Typewriter
-                                                        text={msg.text}
-                                                        delay={5}
-                                                    />
+                                                    msg.text
                                                 )}
                                             </>
                                         )}
