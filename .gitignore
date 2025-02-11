@@ -66,8 +66,11 @@ coverage/
 *.out
 *.so
 
+#Prettier
+.prettierrc.json
+
 # Otros archivos innecesarios
 *.~*
 *.lock
 
-pruebas/
+

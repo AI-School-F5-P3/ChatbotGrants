@@ -5,7 +5,11 @@ module.exports = withMT({
   theme: {
     extend: {
       colors: {
+        custom50LightBlue: '#84d0f5',
+        custom75LightBlue: '#44c8f5',
         customLightBlue: '#00aeef',
+        custom50Blue: '#84b2dc',
+        custom75Blue: '#278fc9',
         customBlue: '#0072b6',
         customGray: '#666666',
         custom75Gray: '#8e8f9b',

@@ -113,3 +113,29 @@ button.btn {
     text-transform: uppercase;
     transition: all .3s ease;
 }
+
+
+@keyframes appear-message {
+  0% { 
+      opacity: 0;
+
+      height: 0;
+   }
+  100% { 
+      opacity: 1;
+
+      height: max-content;
+  }
+}
+
+
+.chat-msg {
+      opacity: 0;
+      height: 0;
+      position: relative;
+      interpolate-size:allow-keywords;
+      animation: appear-message .5s ease-in-out;
+      animation-iteration-count: 1; 
+      animation-fill-mode: forwards;
+      transition: all 1s linear; 
+}

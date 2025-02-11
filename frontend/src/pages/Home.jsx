@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-// import { getAllusers } from "../services/services.js";
+
 import "../app.css";
 import { Logo } from "../components/Logo.jsx";
 import classNames from "classnames";
@@ -51,7 +51,7 @@ function Home() {
     setOpen(false);
   };
 
-  const classEmail = classNames("input-field", {
+  const classEmail = classNames("placeholder:text-custom50Blue input-field", {
     error: errors.email,
   });
 
@@ -59,7 +59,7 @@ function Home() {
     error: errors.email,
   });
 
-  const classPassword = classNames("input-field", {
+  const classPassword = classNames("placeholder:text-custom50Blue input-field", {
     error: errors.password,
   });
 
@@ -97,11 +97,11 @@ function Home() {
                     message: "* Email inválido",
                   },
                 })}
-                value="admin@ayming.com"
+                // value="admin@ayming.com"
               />
               {/* Mensaje de error para el email */}
               {errors.email && (
-                <p className="text-customBlue -mt-6 text-xs p-1 text-right">
+                <p className="text-custom50Blue -mt-6 text-xs p-1 text-right">
                   {errors.email.message}
                 </p>
               )}
@@ -123,7 +123,7 @@ function Home() {
               />
               {/* Mensaje de error para la contraseña */}
               {errors.password && (
-                <p className="text-customBlue -mt-6 text-xs p-1 text-right">
+                <p className="text-custom50Blue -mt-6 text-xs p-1 text-right">
                   {errors.password.message}
                 </p>
               )}
