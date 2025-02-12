@@ -1,25 +1,48 @@
-import requests
+import asyncio
 import json
 import mysql.connector
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from clase_apifandit import FanditAPI
+import pytz
 
-# Configurar logging
-logging.basicConfig(
-    filename='fandit_etl.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+def setup_logging():
+    """
+    Configura el sistema de logging con rotación de archivos y formato detallado
+    """
+    log_formatter = logging.Formatter(
+        '%(asctime)s [%(levelname)s] - '
+        'Operation: %(operation)s - '
+        'Entity: %(entity)s - '
+        'Details: %(message)s'
+    )
 
-# Cargar variables de entorno
+    # Configurar el manejador de archivos con rotación
+    file_handler = RotatingFileHandler(
+        'fandit_etl.log',
+        maxBytes=10*1024*1024,  # 10MB por archivo
+        backupCount=5  # Mantener 5 archivos de respaldo
+    )
+    file_handler.setFormatter(log_formatter)
+
+    # Configurar el manejador de consola para debugging
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+
+    # Configurar el logger
+    logger = logging.getLogger('fandit_etl')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger
+
+# Configuración global
 load_dotenv()
-
-# Configuración
-FANDIT_API_URL = "https://ayming.api.fandit.es/api/v2"
-EXPERT_TOKEN = os.getenv("FANDIT_EXPERT_TOKEN")
+logger = setup_logging()
 
 # Configuración de la base de datos
 DB_CONFIG = {
@@ -29,176 +52,243 @@ DB_CONFIG = {
     'database': 'fandit_db'
 }
 
-def get_api_data(endpoint):
+# Inicializar API Fandit
+api = FanditAPI(
+    token=os.getenv("FANDIT_TOKEN"),
+    expert_token=os.getenv("FANDIT_EXPERT_TOKEN")
+)
+
+async def get_all_funds():
     """
-    Obtiene datos de la API de Fandit
+    Obtiene todas las subvenciones disponibles de la API
     """
-    headers = {
-        'Authorization': f'Bearer {EXPERT_TOKEN}',
-        'Content-Type': 'application/json'
-    }
-    
     try:
-        response = requests.get(f"{FANDIT_API_URL}/{endpoint}", headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error al obtener datos de la API para {endpoint}: {str(e)}")
+        request_data = {
+            "is_open": None,
+            "start_date": None,
+            "end_date": None,
+            "provinces": [],
+            "applicants": [],
+            "communities": [],
+            "action_items": [],
+            "origins": [],
+            "activities": [],
+            "region_types": [],
+            "types": []
+        }
+        
+        logger.info(
+            "Iniciando obtención de subvenciones",
+            extra={'operation': 'api_request', 'entity': 'funds'}
+        )
+        
+        response = await api.obtener_lista_subvenciones(page=1, request_data=request_data)
+        
+        logger.info(
+            f"Obtenidas {len(response.get('results', []))} subvenciones",
+            extra={'operation': 'api_response', 'entity': 'funds'}
+        )
+        
+        return response
+    except Exception as e:
+        logger.error(
+            f"Error obteniendo subvenciones: {str(e)}",
+            extra={'operation': 'api_error', 'entity': 'funds'}
+        )
         raise
 
-def save_funds_data(data):
+def update_fund(cursor, fund_data):
     """
-    Guarda los datos en la tabla funds
+    Actualiza o inserta un registro de fund comparando todos los campos
     """
+    slug = fund_data.get('slug', '')
+    
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-
-        for fund in data:
-            # Convertir listas/diccionarios a JSON strings
-            applicants = json.dumps(fund.get('applicants', []))
-            action_items = json.dumps(fund.get('action_items', []))
-            origins = json.dumps(fund.get('origins', []))
-            activities = json.dumps(fund.get('activities', []))
-            region_types = json.dumps(fund.get('region_types', []))
-            types = json.dumps(fund.get('types', []))
-
-            # Preparar la consulta SQL
-            sql = """
-            INSERT INTO funds (
-                title, is_open, max_budget, bdns, office, 
-                publication_date, end_date, search_tab,
-                applicants, action_items, origins, activities,
-                region_types, types
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            ) ON DUPLICATE KEY UPDATE
-                is_open = VALUES(is_open),
-                max_budget = VALUES(max_budget),
-                bdns = VALUES(bdns),
-                office = VALUES(office),
-                publication_date = VALUES(publication_date),
-                end_date = VALUES(end_date),
-                search_tab = VALUES(search_tab),
-                applicants = VALUES(applicants),
-                action_items = VALUES(action_items),
-                origins = VALUES(origins),
-                activities = VALUES(activities),
-                region_types = VALUES(region_types),
-                types = VALUES(types)
+        # Obtener registro actual si existe
+        check_sql = "SELECT * FROM funds WHERE slug = %s"
+        cursor.execute(check_sql, (slug,))
+        columns = [desc[0] for desc in cursor.description]
+        result = cursor.fetchone()
+        
+        if result:
+            # Comparar y actualizar campos modificados
+            current_data = dict(zip(columns, result))
+            new_data = {
+                'title': fund_data.get('formatted_title'),
+                'is_open': 1 if "abierta" in fund_data.get('status_text', '').lower() else 0,
+                'max_budget': fund_data.get('total_amount', 0.0),
+                'bdns': fund_data.get('bdns'),
+                'office': fund_data.get('entity'),
+                'publication_date': fund_data.get('publication_date'),
+                'end_date': fund_data.get('end_date'),
+                'search_tab': fund_data.get('search_tab', 0),
+                'provinces': json.dumps(fund_data.get('provinces', [])),
+                'communities': json.dumps(fund_data.get('communities', [])),
+                'applicants': json.dumps(fund_data.get('applicants', [])),
+                'action_items': json.dumps(fund_data.get('action_items', [])),
+                'origins': json.dumps(fund_data.get('origins', [])),
+                'activities': json.dumps(fund_data.get('activities', [])),
+                'region_types': json.dumps(fund_data.get('region_types', [])),
+                'types': json.dumps(fund_data.get('types', []))
+            }
+            
+            # Detectar cambios
+            changes = []
+            update_fields = []
+            update_values = []
+            
+            for field, new_value in new_data.items():
+                current_value = current_data.get(field)
+                
+                # Convertir bytes a string para comparación
+                if isinstance(current_value, bytes):
+                    current_value = current_value.decode('utf-8')
+                
+                if new_value != current_value:
+                    update_fields.append(f"{field} = %s")
+                    update_values.append(new_value)
+                    changes.append({
+                        'field': field,
+                        'old': current_value,
+                        'new': new_value
+                    })
+            
+            if changes:
+                # Actualizar registro
+                update_sql = f"""
+                UPDATE funds SET 
+                    {', '.join(update_fields)},
+                    updated_at = NOW()
+                WHERE slug = %s
+                """
+                update_values.append(slug)
+                cursor.execute(update_sql, tuple(update_values))
+                
+                # Registrar cada cambio en el log
+                for change in changes:
+                    logger.info(
+                        f"Campo '{change['field']}' cambió de '{change['old']}' a '{change['new']}'",
+                        extra={
+                            'operation': 'update',
+                            'entity': f'funds/{slug}'
+                        }
+                    )
+                
+                return True
+            
+            logger.info(
+                "No se detectaron cambios",
+                extra={'operation': 'check', 'entity': f'funds/{slug}'}
+            )
+            return False
+            
+        else:
+            # Insertar nuevo registro
+            columns = ', '.join([
+                'slug', 'title', 'is_open', 'max_budget', 'bdns', 'office',
+                'publication_date', 'end_date', 'search_tab', 'provinces',
+                'communities', 'applicants', 'action_items', 'origins',
+                'activities', 'region_types', 'types'
+            ])
+            placeholders = ', '.join(['%s'] * 17)
+            
+            insert_sql = f"""
+            INSERT INTO funds ({columns})
+            VALUES ({placeholders})
             """
             
             values = (
-                fund.get('title'),
-                fund.get('is_open'),
-                fund.get('max_budget'),
-                fund.get('bdns'),
-                fund.get('office'),
-                fund.get('publication_date'),
-                fund.get('end_date'),
-                fund.get('search_tab'),
-                applicants,
-                action_items,
-                origins,
-                activities,
-                region_types,
-                types
+                slug,
+                fund_data.get('formatted_title'),
+                1 if "abierta" in fund_data.get('status_text', '').lower() else 0,
+                fund_data.get('total_amount', 0.0),
+                fund_data.get('bdns'),
+                fund_data.get('entity'),
+                fund_data.get('publication_date'),
+                fund_data.get('end_date'),
+                fund_data.get('search_tab', 0),
+                json.dumps(fund_data.get('provinces', [])),
+                json.dumps(fund_data.get('communities', [])),
+                json.dumps(fund_data.get('applicants', [])),
+                json.dumps(fund_data.get('action_items', [])),
+                json.dumps(fund_data.get('origins', [])),
+                json.dumps(fund_data.get('activities', [])),
+                json.dumps(fund_data.get('region_types', [])),
+                json.dumps(fund_data.get('types', []))
             )
-
-            cursor.execute(sql, values)
-
-        conn.commit()
-        logger.info("Datos guardados exitosamente en la tabla funds")
-
-    except mysql.connector.Error as e:
-        logger.error(f"Error al guardar datos en funds: {str(e)}")
-        raise
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-def save_fund_details_data(data):
-    """
-    Guarda los datos en la tabla fund_details
-    """
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-
-        for detail in data:
-            # Convertir campos JSON
-            official_info = json.dumps(detail.get('official_info', {}))
-            eligible_recipients = json.dumps(detail.get('eligible_recipients', []))
-            covered_expenses = json.dumps(detail.get('covered_expenses', []))
-            additional_info = json.dumps(detail.get('additional_info', {}))
-
-            sql = """
-            INSERT INTO fund_details (
-                title, purpose, submission_period_opening,
-                submission_period_closing, funds, scope, max_aid,
-                official_info, eligible_recipients,
-                covered_expenses, additional_info
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            ) ON DUPLICATE KEY UPDATE
-                purpose = VALUES(purpose),
-                submission_period_opening = VALUES(submission_period_opening),
-                submission_period_closing = VALUES(submission_period_closing),
-                funds = VALUES(funds),
-                scope = VALUES(scope),
-                max_aid = VALUES(max_aid),
-                official_info = VALUES(official_info),
-                eligible_recipients = VALUES(eligible_recipients),
-                covered_expenses = VALUES(covered_expenses),
-                additional_info = VALUES(additional_info)
-            """
-
-            values = (
-                detail.get('title'),
-                detail.get('purpose'),
-                detail.get('submission_period_opening'),
-                detail.get('submission_period_closing'),
-                detail.get('funds'),
-                detail.get('scope'),
-                detail.get('max_aid'),
-                official_info,
-                eligible_recipients,
-                covered_expenses,
-                additional_info
+            
+            cursor.execute(insert_sql, values)
+            
+            logger.info(
+                f"Nueva subvención creada",
+                extra={
+                    'operation': 'insert',
+                    'entity': f'funds/{slug}'
+                }
             )
-
-            cursor.execute(sql, values)
-
-        conn.commit()
-        logger.info("Datos guardados exitosamente en la tabla fund_details")
-
-    except mysql.connector.Error as e:
-        logger.error(f"Error al guardar datos en fund_details: {str(e)}")
+            return True
+            
+    except Exception as e:
+        logger.error(
+            f"Error procesando subvención: {str(e)}",
+            extra={
+                'operation': 'error',
+                'entity': f'funds/{slug}'
+            }
+        )
         raise
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
 
-def main():
+async def main():
     """
     Función principal que ejecuta el proceso ETL
     """
     try:
-        # Obtener y guardar datos de funds
-        funds_data = get_api_data('funds')
-        save_funds_data(funds_data)
+             
+        logger.info(
+            "Iniciando proceso ETL",
+            extra={
+                'operation': 'start',
+                'entity': 'etl'
+            }
+        )
         
-        # Obtener y guardar datos de fund_details
-        fund_details_data = get_api_data('fund_details')
-        save_fund_details_data(fund_details_data)
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
         
-        logger.info("Proceso ETL completado exitosamente")
-        
+        try:
+            # Obtener y procesar datos
+            funds_data = await get_all_funds()
+            if funds_data and 'results' in funds_data:
+                updates = 0
+                for fund in funds_data['results']:
+                    if update_fund(cursor, fund):
+                        updates += 1
+                
+                conn.commit()
+                logger.info(
+                    f"Proceso completado: {updates} registros actualizados",
+                    extra={
+                        'operation': 'complete',
+                        'entity': 'etl'
+                    }
+                )
+            
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
+            
     except Exception as e:
-        logger.error(f"Error en el proceso ETL: {str(e)}")
+        logger.error(
+            f"Error en proceso ETL: {str(e)}",
+            extra={
+                'operation': 'error',
+                'entity': 'etl'
+            }
+        )
         raise
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
