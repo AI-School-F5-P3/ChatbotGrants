@@ -1,0 +1,5 @@
+langgraph
+fastapi
+uvicorn
+python-dotenv
+boto3

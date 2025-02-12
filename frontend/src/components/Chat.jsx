@@ -228,10 +228,11 @@ const Chat = () => {
                                                                 <span></span>
                                                             </div>
                                                         ) : (
-                                                            <Typewriter
-                                                                text={msg.text}
-                                                                delay={5}
-                                                            />
+                                                            // <Typewriter
+                                                            //     text={msg.text}
+                                                            //     delay={5}
+                                                            // />
+                                                            <div>{msg.text}</div>
                                                         )}
                                                     </>
                                                 ) : (
