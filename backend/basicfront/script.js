@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'http://localhost:8000';
 const userId = 'user_' + Math.random().toString(36).substr(2, 9);
 
 // DOM Elements

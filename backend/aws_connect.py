@@ -35,6 +35,8 @@ def get_aws_session():
         region_name=os.getenv('AWS_REGION', 'eu-south-2')
     )
 
+
+
 def get_bedrock_response(prompt: str):
     """Get response from Bedrock."""
     session = get_aws_session()

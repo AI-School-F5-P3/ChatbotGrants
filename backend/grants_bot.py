@@ -1,8 +1,8 @@
 # grants_bot.py
 from typing import TypedDict, List, Dict, Optional
 from langgraph.graph import StateGraph, START, END
-from .tools import load_grants, find_optimal_grants, get_grant_detail
-from .aws_connect import get_bedrock_response
+from tools import load_grants, find_optimal_grants, get_grant_detail
+from aws_connect import get_bedrock_response
 
 class State(TypedDict):
     messages: List[Dict]
@@ -18,8 +18,8 @@ class State(TypedDict):
 class GrantsBot:
     def __init__(self):
         self.FIELDS = [
-            ("Nombre del cliente", "Por favor, ¿Podrías decirme el nombre de la empresa?"),
-            ("Comunidad Autónoma", "Gracias. ¿En qué Comunidad Autónoma está?"),
+            ("Nombre del cliente", "Por favor, ¿podrías decirme el nombre de la Empresa?"),
+            ("Comunidad Autónoma", "Gracias. ¿En qué Comunidad Autónoma está ?"),
             ("Tipo de Empresa", "¿Cuál es el tipo de empresa? (Autónomo, PYME, Gran Empresa)"),
             ("Presupuesto del Proyecto", "¿Cuál es el presupuesto aproximado del proyecto?")
         ]
@@ -70,16 +70,8 @@ class GrantsBot:
         
         if not messages:
             messages.extend([
-                {
-                    "role": "assistant",
-                    "content": "**¡Hola!** Soy un asistente virtual para ayudarte a encontrar subvenciones. "
-                            "Mi objetivo es encontrar las mejores opciones para tu empresa. "
-                            "Para comenzar, dime: "
-                            f"{self.FIELDS[0][1]}"
-                }
+                {"role": "assistant", "content": "¡Hola! Soy un asistente virtual para ayudarte a encontrar subvenciones. Voy a hacerte algunas preguntas "+ self.FIELDS[0][1]}
             ])
-
-
             return {"messages": messages, "user_info": user_info, "info_complete": False}
 
         last_message = messages[-1]
