@@ -1,8 +1,8 @@
 # grants_bot.py
 from typing import TypedDict, List, Dict, Optional
 from langgraph.graph import StateGraph, START, END
-from .tools import load_grants, find_optimal_grants, get_grant_detail
-from .aws_connect import get_bedrock_response
+from tools import load_grants, find_optimal_grants, get_grant_detail
+from aws_connect import get_bedrock_response
 
 class State(TypedDict):
     messages: List[Dict]

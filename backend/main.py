@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Optional, List
 import uuid
-from .grants_bot import GrantsBot, State
+from grants_bot import GrantsBot, State
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from threading import Lock

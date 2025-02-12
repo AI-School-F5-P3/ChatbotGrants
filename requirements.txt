@@ -1,5 +1,6 @@
-langgraph
-fastapi
-uvicorn
-python-dotenv
 boto3
+fastapi
+pydantic
+python-dotenv
+langgraph==0.2.70
+uvicorn
