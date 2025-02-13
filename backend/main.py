@@ -10,7 +10,7 @@ from threading import Lock
 import queue
 from datetime import datetime, timedelta
 
-app = FastAPI()
+app = FastAPI(root_path="/api")  # 🔹 Indica que todas las rutas estarán bajo `/api`
 
 # Configure CORS
 app.add_middleware(
@@ -155,13 +155,23 @@ class SessionManager:
     def get_session(self, user_id: str) -> Optional[UserSession]:
         return self.sessions.get(user_id)
 
-    def end_session(self, user_id: str):
+   
+    def end_session(self, user_id: str) -> bool:                       # IMPROVED
+        """End a user's session with graceful handling"""
         with self.lock:
             if user_id in self.sessions:
-                session = self.sessions[user_id]
-                session.is_active = False
-                session.message_queue.put(None)  # Shutdown signal
-                del self.sessions[user_id]
+                try:
+                    session = self.sessions[user_id]
+                    session.is_active = False
+                    session.message_queue.put(None)  # Shutdown signal
+                    del self.sessions[user_id]
+                    return True
+                except Exception as e:
+                    print(f"Error ending session for {user_id}: {e}")
+                    # Still remove the session even if there's an error
+                    self.sessions.pop(user_id, None)
+                    return True
+            return False  # Session didn't exist
 
     def cleanup_inactive_sessions(self):
         """Remove inactive sessions"""
@@ -177,39 +187,70 @@ class SessionManager:
 # Initialize session manager
 session_manager = SessionManager()
 
-@app.post("/start_session")
+@app.post("/start_session")                                                 #Improved
 async def start_session(user_data: UserMessage) -> SessionResponse:
-    """Start a new session for a user"""
-    session = session_manager.create_session(user_data.user_id)
-    session.message_queue.put("")  # Trigger initial message
-    
-    # Wait for response
-    response, _ = session.response_queue.get()
-    return SessionResponse(
-        session_id=session.session_id,
-        message=response
-    )
-
-@app.post("/chat")
-async def chat(user_data: UserMessage) -> Dict:
-    """Handle chat messages from users"""
-    session = session_manager.get_session(user_data.user_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    # Add message to queue
-    session.message_queue.put(user_data.message)
-    
-    # Wait for response
-    response, session_ended = session.response_queue.get()
-    
-    if session_ended:
+    """Start a new session with improved validation"""
+    try:
+        # End any existing session first
         session_manager.end_session(user_data.user_id)
-    
-    return {
-        "message": response,
-        "session_ended": session_ended
-    }
+        
+        # Create new session
+        session = session_manager.create_session(user_data.user_id)
+        session.message_queue.put("")  # Trigger initial message
+        
+        try:
+            response, _ = session.response_queue.get(timeout=30)
+        except queue.Empty:
+            raise HTTPException(status_code=504, detail="Session initialization timeout")
+            
+        return SessionResponse(
+            session_id=session.session_id,
+            message=response
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in start_session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Could not start session")
+
+
+@app.post("/chat")                                # IMPROVED
+async def chat(user_data: UserMessage) -> Dict:
+    """Handle chat messages with improved error handling"""
+    try:
+        session = session_manager.get_session(user_data.user_id)
+        if not session:
+            # Instead of 404, create a new session
+            session = session_manager.create_session(user_data.user_id)
+            print(f"Created new session for existing chat: {user_data.user_id}")
+        
+        # Add message to queue with timeout
+        try:
+            session.message_queue.put(user_data.message, timeout=1)
+        except queue.Full:
+            raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+            
+        # Wait for response with timeout
+        try:
+            response, session_ended = session.response_queue.get(timeout=30)
+        except queue.Empty:
+            raise HTTPException(status_code=504, detail="Response timeout")
+            
+        if session_ended:
+            session_manager.end_session(user_data.user_id)
+        
+        return {
+            "message": response,
+            "session_ended": session_ended
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in chat endpoint: {str(e)}")
+        return {
+            "message": "An error occurred, please try again",
+            "session_ended": True
+        }
 
 @app.get("/session_state/{user_id}")
 async def get_session_state(user_id: str):
@@ -228,20 +269,52 @@ async def get_session_state(user_id: str):
 
 @app.delete("/end_session/{user_id}")
 async def end_session(user_id: str):
-    """End a user's session"""
-    session = session_manager.get_session(user_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    
-    session_manager.end_session(user_id)
-    return {"message": "Session ended successfully"}
+    """End a user's session with graceful error handling"""
+    try:
+        was_ended = session_manager.end_session(user_id)
+        return {
+            "message": "Session ended successfully" if was_ended else "No active session found",
+            "status": "success"
+        }
+    except Exception as e:
+        print(f"Error in end_session endpoint for {user_id}: {e}")
+        # Return 200 even if there was an error, since the session is effectively ended
+        return {
+            "message": "Session cleanup completed",
+            "status": "success"
+        }
 
 # Background task to clean up inactive sessions
 @app.on_event("startup")
 async def start_cleanup_task():
     async def cleanup_loop():
         while True:
-            session_manager.cleanup_inactive_sessions()
-            await asyncio.sleep(300)  # Check every 5 minutes
+            try:
+                # Get current time once per cleanup cycle
+                current_time = datetime.now()
+                
+                # Create list of sessions to remove to avoid dict size changing during iteration
+                to_remove = []
+                
+                # Only acquire lock briefly to check sessions
+                with session_manager.lock:
+                    for user_id, session in session_manager.sessions.items():
+                        if current_time - session.last_activity > timedelta(minutes=30):
+                            to_remove.append(user_id)
+                
+                # Remove sessions outside the lock
+                for user_id in to_remove:
+                    try:
+                        session_manager.end_session(user_id)
+                    except Exception as e:
+                        print(f"Error removing session {user_id}: {e}")
+                        continue
+                        
+            except Exception as e:
+                print(f"Cleanup error: {e}")
+            
+            # Sleep for 5 minutes between cleanup cycles
+            await asyncio.sleep(300)
     
+    # Start the cleanup loop without waiting for it
     asyncio.create_task(cleanup_loop())

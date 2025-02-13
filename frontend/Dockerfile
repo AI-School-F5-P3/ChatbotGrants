@@ -1,32 +1,29 @@
-# Build stage
+# Etapa de construcción (Build)
 FROM node:18-alpine as build
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copiar package.json e instalar dependencias
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy project files
+# Copiar el resto del código fuente
 COPY . .
 
-# Build the app
+# 🔹 Generar la build de Vite (esto creará /app/dist)
 RUN npm run build
 
-# Production stage
+# 🔹 Verificar si la build se generó correctamente
+RUN ls -lah /app/dist || echo "ERROR: No se generó dist/"
+
+# Etapa de producción con Nginx
 FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# 🔹 Copiar la build generada en la etapa anterior
+COPY --from=build /app/dist/ .
 
-# Copy nginx configuration if you have custom config
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar la configuración personalizada de Nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 80
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
