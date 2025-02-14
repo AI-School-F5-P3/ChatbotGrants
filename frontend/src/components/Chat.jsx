@@ -8,7 +8,6 @@ import {
     Typography,
     Avatar,
 } from "@material-tailwind/react";
-import Typewriter from "./Typewriter";
 import user from "/img/user.svg";
 import ayming from "/img/logo_icono.svg";
 import { chat, startSession } from "../services/services";
