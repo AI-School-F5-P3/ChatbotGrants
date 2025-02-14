@@ -2,6 +2,7 @@ mysql> USE fandit_db;
 Reading table information for completion of table and column names
 You can turn off this feature to get a quicker startup with -A
 
+
 Database changed
 mysql> show tables;
 +---------------------+
@@ -87,7 +88,7 @@ mysql> describe fund_details;
 | Field                     | Type         | Null | Key | Default           | Extra                                         |
 +---------------------------+--------------+------+-----+-------------------+-----------------------------------------------+
 | id                        | int          | NO   | PRI | NULL              | auto_increment                                |
-| fund_slug                 | varchar(255) | YES  | MUL | NULL              |                                               |
+| fund_slug                 | varchar(255) | YES  | UNI | NULL              |                                               |
 | title                     | varchar(255) | YES  |     | NULL              |                                               |
 | purpose                   | text         | YES  |     | NULL              |                                               |
 | submission_period_opening | date         | YES  |     | NULL              |                                               |
