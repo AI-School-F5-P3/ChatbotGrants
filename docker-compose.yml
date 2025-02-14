@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   backend-api:
     container_name: backend-api
@@ -15,7 +14,7 @@ services:
     container_name: frontend-web
     image: frontend:latest
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - backend-api
     networks:
