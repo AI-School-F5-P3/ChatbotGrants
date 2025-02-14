@@ -1,0 +1,154 @@
+{
+  "grants": [
+    {
+      "title": "Ayudas del Programa KIT DIGITAL - Segmento III",
+      "purpose": "Mejorar la competitividad y el nivel de madurez digital de las pequeñas empresas, de las microempresas y de las personas en situación de autoempleo, mediante la adopción de soluciones de digitalización.",
+      "submission_period": {
+        "opening": "15/03/2022",
+        "closing": "31/10/2025"
+      },
+      "funds": "1.260.000.000€",
+      "scope": "Estatal",
+      "max_aid": "3.000€",
+      "official_info": {
+        "regulatory_basis": true,
+        "call": true,
+        "electronic_office": true,
+        "bdns": "612093",
+        "convening_body": "MINISTERIO DE ASUNTOS ECONÓMICOS Y TRANSFORMACIÓN DIGITAL - RED.ES"
+      },
+      "eligible_recipients": {
+        "segment_iii": {
+          "description": "Las pequeñas empresas o microempresas entre 0 y menos de 3 empleados, y trabajadores autónomos, que pertenezcan a cualquier sector o tipología de negocio y cuyo domicilio fiscal esté en España.",
+          "requirements": [
+            "Es requisito para obtener la condición de beneficiario disponer de la evaluación del Nivel de Madurez Digital, de acuerdo con el test de diagnóstico disponible en la plataforma Acelera pyme."
+          ],
+          "exclusions": [
+            "Las personas físicas o jurídicas que sean Agentes Digitalizadores Adheridos",
+            "aquellas con las que estos contraten o subcontraten para la prestación",
+            "las personas en situación de autoempleo que tengan la consideración de autónomos societarios o autónomos colaboradores",
+            "las uniones temporales de empresas (UTE)",
+            "las personas físicas o jurídicas que hayan obtenido la condición de beneficiarias en alguna de las Convocatorias del Programa",
+            "las empresas de naturaleza pública y las entidades de derecho público"
+          ]
+        },
+        "communities_line": {
+          "description": "Las comunidades de bienes, sociedades civiles con objeto mercantil, sociedades civiles profesionales y explotaciones agrarias de titularidad compartida, cuyo domicilio fiscal esté ubicado en territorio español."
+        }
+      },
+      "covered_expenses": [
+        "Presencia en internet y sitio web: creación de una página web para la pyme y/o prestación de servicios que proporcionen posicionamiento básico en internet",
+        "Comercio electrónico: creación de una tienda online de compraventa de productos y/o servicios que utilice medios digitales para su intercambio",
+        "Gestión de redes sociales: promocionar la pyme en redes sociales",
+        "Gestión de clientes y/o proveedores: digitalizar y optimizar la gestión de las relaciones comerciales con los clientes",
+        "Business Intelligence y analítica: explotación de datos de la empresa para la mejora del proceso de toma de decisiones",
+        "Servicios y herramientas de oficina virtual: implantar soluciones interactivas y funcionales que permitan la colaboración más eficiente entre los trabajadores de la pyme",
+        "Gestión de procesos: digitalizar y/o automatizar procesos de negocio relacionados con los aspectos operativos o productivos de la pyme",
+        "Factura electrónica: digitalizar el flujo de emisión de facturas entre la pyme y sus clientes",
+        "Comunicaciones seguras: proporcionar a las pymes seguridad en las conexiones entre los dispositivos de sus empleados y la empresa",
+        "Ciberseguridad: proporcionar a las pymes seguridad básica y avanzada para los dispositivos de sus empleados",
+        "Presencia avanzada en internet",
+        "Marketplace",
+        "La compra de un ordenador, hasta 1.000€ por dispositivo"
+      ],
+      "additional_info": [
+        "Podrán destinarse estas ayudas a la adopción de soluciones de digitalización cuyo fin sea la sustitución de las ya adoptadas por el beneficiario, siempre que supongan una mejora funcional",
+        "El número de empleados del segmento I será el correspondiente a la plantilla media del último ejercicio cerrado previo a la solicitud de la ayuda",
+        "El cálculo de la plantilla media se hará sobre los 12 meses anteriores a la fecha de solicitud de la ayuda"
+      ]
+    },
+    {
+      "title": "Ayudas del Kit Consulting dirigidas a PYMEs",
+      "purpose": "El apoyo a la transformación digital de las pequeñas y medianas empresas mediante la concesión de ayudas para la contratación de servicios de asesoramiento.",
+      "submission_period": {
+        "opening": "18/06/2024",
+        "closing": "28/02/2025"
+      },
+      "funds": "270.000.000€",
+      "scope": "Estatal",
+      "max_aid": "24.000€",
+      "official_info": {
+        "regulatory_basis": true,
+        "call": true,
+        "electronic_office": true,
+        "bdns": "750851",
+        "convening_body": "Ministerio para la Transformación Digital y de la Función Pública"
+      },
+      "eligible_recipients": {
+        "description": "Las PYMEs cuyo domicilio fiscal esté ubicado en territorio español.",
+        "segments": {
+          "segment_a": "Empresas de entre 10 y menos de 50 empleados",
+          "segment_b": "Empresas de entre 50 y menos de 100 empleados",
+          "segment_c": "Empresas de entre 100 y menos de 250 empleados"
+        }
+      },
+      "aid_details": {
+        "segment_a": "hasta 12.000 €",
+        "segment_b": "hasta 18.000 €",
+        "segment_c": "hasta 24.000 €",
+        "per_category": "Para cada Categoría de Servicio de Asesoramiento se estipula un importe máximo de 6.000€"
+      },
+      "covered_expenses": [
+        "Inteligencia artificial",
+        "Análisis de datos (básico y avanzado)",
+        "Ventas digitales",
+        "Procesos de negocio o de producción",
+        "Estrategia y rendimiento de negocio",
+        "Ciberseguridad",
+        "Transformación digital"
+      ],
+      "additional_info": [
+        "El plazo máximo para la formalización del primer Acuerdo de Prestación de Servicios de Asesoramiento será de 3 meses desde la publicación de la Resolución",
+        "El plazo máximo para la presentación de Acuerdos finalizará el 31 de julio de 2025 a las 23:59 horas"
+      ]
+    },
+    {
+      "title": "Línea directa de expansión (LIC-A) de CDTI a la inversión, para potenciar el crecimiento de empresas innovadoras",
+      "purpose": "Potenciar la innovación mediante ayudas a la inversión inicial en favor de una nueva actividad económica para potenciar el crecimiento de empresas innovadoras.",
+      "submission_period": {
+        "description": "Siempre abierta. Presupuesto ilimitado"
+      },
+      "funds": "56.000.000€",
+      "scope": "Estatal",
+      "max_aid": "30.000.000€",
+      "official_info": {
+        "regulatory_basis": true,
+        "call": true,
+        "electronic_office": true,
+        "bdns": "694661",
+        "convening_body": "MINISTERIO DE CIENCIA E INNOVACIÓN - CENTRO PARA EL DESARROLLO TECNOLÓGICO Y LA INNOVACIÓN E.P.E"
+      },
+      "eligible_recipients": {
+        "description": "Empresas que estén válidamente constituidas, tengan personalidad jurídica propia y domicilio fiscal en España, y desarrollen un proyecto de inversión en las regiones asistidas.",
+        "special_condition": "Podrán ser beneficiarias las empresas que no se encontraban en crisis el 31 de diciembre de 2019, pero pasaron a ser empresas en crisis en el período comprendido entre el 1 de enero de 2020 y el 30 de diciembre de 2021."
+      },
+      "aid_details": {
+        "interest_rate": "Euribor a 1 año + 0,75%",
+        "coverage": "hasta el 75% del presupuesto aprobado",
+        "repayment": "9 años, con un año de carencia desde la finalización del proyecto",
+        "min_budget": "175.000 euros",
+        "max_budget": "30.000.000 euros",
+        "duration": "entre 9 meses y 24 meses",
+        "non_refundable_portion": {
+          "eu_funds": "15% - 25%",
+          "cdti_funds": "10%"
+        }
+      },
+      "covered_expenses": {
+        "description": "La adquisición de activos fijos nuevos que supongan una innovación tecnológica y mejora de capacidades productivas",
+        "eligible_assets": {
+          "material": "activos consistentes en maquinaria y equipos",
+          "immaterial": "activos que no tienen una materialización física o financiera, como las patentes, licencias, conocimientos técnicos u otros derechos de propiedad intelectual o industrial"
+        }
+      },
+      "restrictions": [
+        "No podrán ser objeto de ayuda los proyectos que favorezcan las actividades de los sectores del acero, el carbón, la construcción naval o las fibras sintéticas"
+      ],
+      "additional_info": [
+        "El CDTI podrá requerir la constitución de garantías para la devolución de la ayuda cuando el análisis económico financiero de la empresa así lo requiera",
+        "Los proyectos cofinanciados con Fondos FEDER 21-27 deberán acreditar el cumplimiento del principio DNSH",
+        "La ayuda tiene efecto incentivador, por los que la solicitud debe presentarse antes de comenzar el proyecto"
+      ]
+    }
+  ]
+}

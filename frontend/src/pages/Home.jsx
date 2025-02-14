@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
@@ -26,12 +26,24 @@ function Home() {
     reset,
   } = useForm();
   const navigate = useNavigate();
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
   useEffect(() => {
-    reset(); // Resetear el formulario al montar el componente
+    reset();
+    
+    // Secuencia de foco: primero contraseña, luego usuario
+    if (passwordInputRef.current) {
+      passwordInputRef.current.focus();
+      
+      // Después de un breve momento, mover el foco al campo de usuario
+      setTimeout(() => {
+        if (emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
+      }, 100); // 100ms de retraso
+    }
   }, [reset]);
-
-  
 
   const onSubmit = async (data) => {
     const { email, password } = data;
@@ -66,7 +78,7 @@ function Home() {
   return (
     <>
       <div className="flex items-center justify-center h-[calc(100vh-2rem)] text-white font-lato">
-        <Card color="transparent" shadow={false}>
+        <Card color="transparent" shadow={false} className="border border-custom50Blue p-16 pb-[6rem] rounded-lg">
           <Typography
             variant="h4"
             color="white"
@@ -90,6 +102,7 @@ function Home() {
                   className: "mt-2",
                 }}
                 label={`${errors.email ? "" : ""} Usuario`}
+                inputRef={emailInputRef}
                 {...register("email", {
                   required: "* Obligatorio",
                   pattern: {
@@ -97,7 +110,6 @@ function Home() {
                     message: "* Email inválido",
                   },
                 })}
-                // value="admin@ayming.com"
               />
               {/* Mensaje de error para el email */}
               {errors.email && (
@@ -119,6 +131,7 @@ function Home() {
                 labelProps={{
                   className: "text-white",
                 }}
+                inputRef={passwordInputRef}
                 {...register("password", { required: "* Obligatorio" })}
               />
               {/* Mensaje de error para la contraseña */}
@@ -139,7 +152,6 @@ function Home() {
           </form>
           <Dialog open={open} handler={handleClose}>
             <DialogBody className="grid place-items-center gap-4">
-              
               <Typography className="text-customBlue mt-8" variant="h4">
                 Ups!
               </Typography>

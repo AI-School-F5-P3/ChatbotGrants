@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import {
     Button,
     ButtonGroup,
@@ -12,30 +11,28 @@ import {
 import Typewriter from "./Typewriter";
 import user from "/img/user.svg";
 import ayming from "/img/logo_icono.svg";
+import { chat, startSession } from "../services/services";
+
+const userId = "user_" + Math.random().toString(36).slice(2, 9);
 
 const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState("");
+    const [isTyping, setIsTyping] = useState(false);
+    const [isSessionActive, setIsSessionActive] = useState(true);
     const messagesEndRef = useRef(null);
 
-    // 🔹 Llamada inicial al endpoint /msg/ cuando la página carga
+    // Llamada inicial al endpoint /msg/ cuando la página carga
     useEffect(() => {
-        const fetchWelcomeMessage = async () => {
-            try {
-                const response = await axios.get("http://localhost:8000/msg/");
-                setMessages([{ sender: "bot", text: response.data.msg }]); // Mensaje inicial del bot
-            } catch (error) {
-                console.error(
-                    "Error obteniendo el mensaje de bienvenida:",
-                    error
-                );
-            }
-        };
-
-        fetchWelcomeMessage();
+        startSession(userId)
+            .then((data) => {
+                console.log("Sesión iniciada");
+                setMessages([{ sender: "bot", text: data.message }]); // Agrega el mensaje inicial del bot
+            })
+            .catch((err) => console.error("Error iniciando sesión:", err));
     }, []);
 
-    // 🔹 Scroll automático al último mensaje
+    // Scroll automático al último mensaje
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollTo({
@@ -45,30 +42,64 @@ const Chat = () => {
         }
     }, [messages]); // Se ejecuta cada vez que cambia la lista de mensajes
 
-    // 🔹 Manejo del envío de mensajes
+    // Manejo del envío de mensajes
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!inputMessage.trim()) return;
+        if (!inputMessage.trim() || !isSessionActive) return;
 
-        setMessages([...messages, { sender: "user", text: inputMessage }]);
+        // Agregar mensaje del usuario
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: "user", text: inputMessage },
+        ]);
+
+        // Mostrar el loader como un mensaje vacío del bot
+        setIsTyping(true);
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: "bot", text: "", isTyping: true }, // Mensaje temporal del bot con indicador
+        ]);
 
         try {
-            const response = await axios.post("http://localhost:8000/chat/", {
-                message: inputMessage,
-            });
+            const botResponse = await chat(userId, inputMessage);
 
-            // Esperar 2 segundos hasta que termine la animacion del mensaje del usuario
-            setTimeout(() => {
-                setMessages((prevMessages) => [
-                    ...prevMessages,
-                    { sender: "bot", text: response.data.reply },
-                ]);
-            }, 500);
+            // Reemplazar el mensaje del loader con la respuesta del bot
+            setMessages((prevMessages) =>
+                prevMessages.map((msg, index) =>
+                    index === prevMessages.length - 1 && msg.isTyping
+                        ? { sender: "bot", text: botResponse, isTyping: false }
+                        : msg
+                )
+            );
         } catch (error) {
             console.error("Error enviando el mensaje:", error);
         }
 
+        setIsTyping(false);
         setInputMessage(""); // Limpiar input después de enviar
+    };
+
+    const endSession = async () => {
+        try {
+            await fetch(`${API_URL}/end_session/${userId}`, {
+                method: "DELETE",
+            });
+
+            setIsSessionActive(false); // Marcar la sesión como finalizada
+
+            // Mostrar mensaje de fin de sesión en el chat
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                {
+                    sender: "bot",
+                    text: "🔚 Sesión finalizada. Gracias por usar el chatbot.",
+                },
+            ]);
+
+            console.log("Sesión finalizada");
+        } catch (error) {
+            console.error("Error ending session:", error);
+        }
     };
 
     return (
@@ -79,7 +110,7 @@ const Chat = () => {
                     shadow={false}
                     className="flex flex-col-reverse rounded-none w-[calc(100vw-23rem)] overflow-y-auto p-0 h-[calc(100vh-16rem)] "
                 >
-                    <div className="mb-5">
+                    {/* <div className="mb-5">
                         {messages.map((msg, index) => (
                             <Card
                                 color="transparent"
@@ -115,8 +146,6 @@ const Chat = () => {
                                     />
 
                                     <CardBody
-                                        shadow={true}
-                                        // className="bg-red-100 flex flex-row p-3 rounded-lg max-w-[80%]"
                                         className={`p-3 rounded-lg max-w-[80%] ${
                                             msg.sender === "user"
                                                 ? "bg-customLightBlue text-white text-right ml-auto mt-[.1rem]"
@@ -129,17 +158,92 @@ const Chat = () => {
                                             <>
                                                 <Typewriter
                                                     text={msg.text}
-                                                    delay={10}
+                                                    delay={5}
                                                 />
-                                                
                                             </>
                                         )}
                                     </CardBody>
                                 </span>
-                                
                             </Card>
                         ))}
 
+                        <div ref={messagesEndRef} />
+                    </div> */}
+                    <div className="mb-5">
+                        {messages.map((msg, index) => (
+                            <Card
+                                color="transparent"
+                                shadow={false}
+                                key={index}
+                                className="overflow-hidden flex flex-column"
+                            >
+                                <span
+                                    className={`inline-block flex flex-row max-w-full w-[80%] ${
+                                        msg.sender === "user"
+                                            ? "chat-msg min-h-[.5rem] overflow-hidden flex-row-reverse text-right ml-auto my-4"
+                                            : "chat-msg min-h-[.5rem] overflow-hidden  text-left mr-auto"
+                                    } break-words`}
+                                >
+                                    <Avatar
+                                        variant="circular"
+                                        size="md"
+                                        alt={
+                                            msg.sender === "user"
+                                                ? "User"
+                                                : "Ayming"
+                                        }
+                                        className={`${
+                                            msg.sender === "user"
+                                                ? "border-customLightBlue ml-2"
+                                                : "border-white mr-2"
+                                        } border-[5px] bg-white`}
+                                        src={
+                                            msg.sender === "user"
+                                                ? user
+                                                : ayming
+                                        }
+                                    />
+
+                                    <CardBody
+                                        className={`p-3 rounded-lg max-w-[100%] ${
+                                            msg.sender === "user"
+                                                ? "bg-customLightBlue text-white text-right ml-auto mt-[.1rem]"
+                                                : "bg-white text-left mr-auto mt-[.1rem]"
+                                        } break-words`}
+                                    >
+                                        {msg.sender === "user" ? (
+                                            msg.text
+                                        ) : (
+                                            <>
+                                                {msg.sender === "bot" ? (
+                                                    <>
+                                                        {/* Si este es el último mensaje del array y el bot está escribiendo, muestra el typing indicator */}
+                                                        {isTyping &&
+                                                        index ===
+                                                            messages.length -
+                                                                1 ? (
+                                                            <div className="typing-indicator">
+                                                                <span></span>
+                                                                <span></span>
+                                                                <span></span>
+                                                            </div>
+                                                        ) : (
+                                                            // <Typewriter
+                                                            //     text={msg.text}
+                                                            //     delay={5}
+                                                            // />
+                                                            <div>{msg.text}</div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    msg.text
+                                                )}
+                                            </>
+                                        )}
+                                    </CardBody>
+                                </span>
+                            </Card>
+                        ))}
                         <div ref={messagesEndRef} />
                     </div>
                 </Card>
