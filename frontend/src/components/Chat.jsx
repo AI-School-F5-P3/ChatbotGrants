@@ -12,6 +12,7 @@ import Typewriter from "./Typewriter";
 import user from "/img/user.svg";
 import ayming from "/img/logo_icono.svg";
 import { chat, startSession } from "../services/services";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 const userId = "user_" + Math.random().toString(36).slice(2, 9);
 
@@ -21,6 +22,39 @@ const Chat = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [isSessionActive, setIsSessionActive] = useState(true);
     const messagesEndRef = useRef(null);
+
+    const markdown_content = `
+# 🚀 ¡Bienvenido a Markdoc en Vite!
+
+Este contenido está almacenado en una **variable**.
+
+---
+
+- ✅ Basado en Markdown
+- ⚡ Rápido y ligero
+- 🔒 Seguro y controlado
+
+---
+
+## **¿Listo para probarlo?**
+
+{% callout type="info" %}
+Markdoc permite usar etiquetas personalizadas como esta. 
+{% /callout %}
+
+
+| Nombre   | Edad | Ciudad      |
+|----------|------|------------|
+| Ana      | 25   | Madrid     |
+| Juan     | 30   | Barcelona  |
+| María    | 28   | Valencia   |
+
+
+{% details summary="Ver más información" %}
+Aquí hay contenido oculto que se muestra cuando haces clic.
+{% /details %}
+
+`;
 
     // Llamada inicial al endpoint /msg/ cuando la página carga
     useEffect(() => {
@@ -110,65 +144,6 @@ const Chat = () => {
                     shadow={false}
                     className="flex flex-col-reverse rounded-none w-[calc(100vw-23rem)] overflow-y-auto p-0 h-[calc(100vh-16rem)] "
                 >
-                    {/* <div className="mb-5">
-                        {messages.map((msg, index) => (
-                            <Card
-                                color="transparent"
-                                shadow={false}
-                                key={index}
-                                className="overflow-hidden flex flex-column"
-                            >
-                                <span
-                                    className={`inline-block flex flex-row max-w-full w-[80%] ${
-                                        msg.sender === "user"
-                                            ? "chat-msg flex-row-reverse text-right ml-auto my-4"
-                                            : "chat-msg text-left mr-auto"
-                                    } break-words`}
-                                >
-                                    <Avatar
-                                        variant="circular"
-                                        size="md"
-                                        alt={
-                                            msg.sender === "user"
-                                                ? "User"
-                                                : "Ayming"
-                                        }
-                                        className={`${
-                                            msg.sender === "user"
-                                                ? "border-customLightBlue ml-2"
-                                                : "border-white mr-2"
-                                        } border-[5px] bg-white`}
-                                        src={
-                                            msg.sender === "user"
-                                                ? user
-                                                : ayming
-                                        }
-                                    />
-
-                                    <CardBody
-                                        className={`p-3 rounded-lg max-w-[80%] ${
-                                            msg.sender === "user"
-                                                ? "bg-customLightBlue text-white text-right ml-auto mt-[.1rem]"
-                                                : "bg-white text-left mr-auto mt-[.1rem]"
-                                        } break-words`}
-                                    >
-                                        {msg.sender === "user" ? (
-                                            msg.text
-                                        ) : (
-                                            <>
-                                                <Typewriter
-                                                    text={msg.text}
-                                                    delay={5}
-                                                />
-                                            </>
-                                        )}
-                                    </CardBody>
-                                </span>
-                            </Card>
-                        ))}
-
-                        <div ref={messagesEndRef} />
-                    </div> */}
                     <div className="mb-5">
                         {messages.map((msg, index) => (
                             <Card
@@ -217,7 +192,6 @@ const Chat = () => {
                                             <>
                                                 {msg.sender === "bot" ? (
                                                     <>
-                                                        {/* Si este es el último mensaje del array y el bot está escribiendo, muestra el typing indicator */}
                                                         {isTyping &&
                                                         index ===
                                                             messages.length -
@@ -228,11 +202,14 @@ const Chat = () => {
                                                                 <span></span>
                                                             </div>
                                                         ) : (
-                                                            // <Typewriter
-                                                            //     text={msg.text}
-                                                            //     delay={5}
-                                                            // />
-                                                            <div>{msg.text}</div>
+                                                            <>
+                                                                <MarkdownRenderer
+                                                                    markdown={
+                                                                        markdown_content + msg.text
+                                                                    }
+                                                                />
+
+                                                            </>
                                                         )}
                                                     </>
                                                 ) : (
