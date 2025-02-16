@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import Markdoc from "@markdoc/markdoc";
 import {
     Card,
@@ -37,20 +37,72 @@ const Callout = ({ type = "note", children }) => {
 
 // Definición del tag personalizado Details
 const details = {
-  render: "Details",
-  attributes: {
-      summary: { type: String },
-  },
+    render: "Details",
+    attributes: {
+        summary: { type: String },
+    },
 };
 
 // Componente Details
 const Details = ({ summary, children }) => {
-  return (
-      <details className="my-5 p-2 border border-gray-300 rounded-md">
-          <summary className="cursor-pointer font-semibold">{summary}</summary>
-          <div className="mt-2">{children}</div>
-      </details>
-  );
+    const detailsRef = useRef(null);
+
+    useEffect(() => {
+        const details = detailsRef.current;
+
+        const handleToggle = () => {
+            setTimeout(() => {
+                if (details.open) {
+                    // Si se abre, desplazamos el elemento a la parte superior
+                    details.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+                } else {
+                    // Si se cierra, desplazamos la vista a la parte inferior
+                    requestAnimationFrame(() => {
+                        const rect = details.getBoundingClientRect();
+                        const bottomOffset = rect.bottom + window.scrollY;
+                        const viewportHeight = window.innerHeight;
+                        const maxScroll =
+                            document.documentElement.scrollHeight -
+                            viewportHeight;
+
+                        if (bottomOffset > maxScroll) {
+                            // Si el elemento está cerca del final de la página, llevamos el scroll al máximo
+                            window.scrollTo({
+                                top: maxScroll,
+                                behavior: "smooth",
+                            });
+                        } else {
+                            // Si hay espacio suficiente, desplazamos el scroll hasta la parte inferior del elemento
+                            window.scrollBy({
+                                top: rect.height,
+                                behavior: "smooth",
+                            });
+                        }
+                    });
+                }
+            }, 100);
+        };
+
+        details.addEventListener("toggle", handleToggle);
+        return () => details.removeEventListener("toggle", handleToggle);
+    }, []);
+
+    return (
+        <>
+            <details
+                ref={detailsRef}
+                className="my-5 p-2 border border-gray-300 rounded-md"
+            >
+                <summary className="cursor-pointer font-semibold">
+                    {summary}
+                </summary>
+                <div className="mt-6">{children}</div>
+            </details>
+        </>
+    );
 };
 
 const MarkdownRenderer = ({ markdown }) => {

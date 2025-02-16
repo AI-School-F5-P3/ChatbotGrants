@@ -74,9 +74,6 @@ figure.logo-default svg {
 }
 
 .input-field:autofill {
-  /* background: red !important; */
-  /* border: 5px solid red; */
-  /* background-color: red !important; */
   color: #fff !important;
   box-shadow: 0 0 1000px #0072b6 inset !important;
   transition: background-color 5000s ease-in-out 0s !important;
@@ -239,3 +236,37 @@ table tfoot .links a{
   padding: 2px 8px;
   border-radius: 5px;
 }
+
+/* 📌 Estructura base del mensaje */
+/* .o-message {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .o-message--user {
+    justify-content: flex-end;
+  }
+  
+  .o-message--bot {
+    justify-content: flex-start;
+  } */
+  
+  /* 📌 Bocadillo del mensaje */
+  .c-bubble {
+    position: relative;
+    padding: 2rem 3rem;
+    border-radius: 1rem;
+    font-size: 1em;
+    line-height: 1.4;
+    max-width: 100%;
+  }
+  .c-bubble article{
+    width: 100vw;
+    max-width: 100%;
+  }
+  
+  /* 📌 Diferenciación de estilos */
+  /* .c-bubble--user {  }
+  
+  .c-bubble--bot {  } */

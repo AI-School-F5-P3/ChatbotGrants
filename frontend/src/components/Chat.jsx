@@ -23,37 +23,186 @@ const Chat = () => {
     const messagesEndRef = useRef(null);
 
     const markdown_content = `
-# 🚀 ¡Bienvenido a Markdoc en Vite!
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
 
-Este contenido está almacenado en una **variable**.
+{% details summary="BDNS: 676689 · Subvenciones para el Fomento de la Contratación en la Comunidad de Madrid" %}
 
----
+# Subvenciones para el Fomento de la Contratación en la Comunidad de Madrid
 
-- ✅ Basado en Markdown
-- ⚡ Rápido y ligero
-- 🔒 Seguro y controlado
+## Información General
 
----
+| **Concepto**                          | **Detalle** |
+|----------------------------------------|------------|
+| **Objetivo**                           | Mejorar la empleabilidad e incorporar al mercado laboral a personas desempleadas, especialmente de colectivos vulnerables. |
+| **Plazo de presentación**              | Abierta hasta agotar fondos. |
+| **Fondos disponibles**                 | 120.000.000 € |
+| **Ámbito de aplicación**               | Comunidad de Madrid |
+| **Ayuda máxima por beneficiario**      | 14.000 € |
+| **Convocatoria**                       | [Sede electrónica](https://www.comunidad.madrid/servicios/empleo/ayudas-e-incentivos-empleo) |
+| **BDNS**                               | 676689 |
+| **Órgano convocante**                  | Comunidad de Madrid - Consejería de Economía, Hacienda y Empleo |
+| **Concurrencia**                       | No competitiva (las solicitudes se atienden por orden de presentación). |
+| **Sujeta a mínimis**                   | Sí |
 
-## **¿Listo para probarlo?**
+## Beneficiarios
 
-{% callout type="info" %}
-Markdoc permite usar etiquetas personalizadas como esta. 
-{% /callout %}
+| **Línea de subvención** | **Beneficiarios** |
+|------------------------|-----------------|
+| **Líneas 1, 2, 3, 4 y 5** | Autónomos, empresas y entidades privadas sin ánimo de lucro. Agrupaciones privadas de personas físicas o jurídicas, comunidades de bienes u otras unidades económicas sin personalidad jurídica. |
+| **Línea 6** | Empresas de inserción, entidades sin ánimo de lucro con programas de empleo, centros especiales de empleo. |
 
+## Plazo para la Solicitud
 
-| Nombre   | Edad | Ciudad      |
-|----------|------|------------|
-| Ana      | 25   | Madrid     |
-| Juan     | 30   | Barcelona  |
-| María    | 28   | Valencia   |
+- **El plazo de presentación es de 1 mes** desde la fecha de alta en la Seguridad Social de la persona contratada.
 
+## Líneas de Subvención y Cuantía
 
-{% details summary="Ver más información" %}
-Aquí hay contenido oculto que se muestra cuando haces clic.
+| **Línea** | **Descripción** | **Ayuda** |
+|----------|----------------|------------|
+| **Línea 1** | Contratación indefinida de personas desempleadas de especial atención. | Entre 5.500 € y 7.500 € según el colectivo contratado. |
+| **Línea 2** | Contratación estable de personas jóvenes. | 5.500 € por contratación indefinida. |
+| **Línea 3** | Contrato formativo para la práctica profesional de personas jóvenes. | 5.500 € por contrato formativo. |
+| **Línea 4** | Contrato de formación en alternancia para personas jóvenes. | 5.500 € por contrato formativo. |
+| **Línea 5** | Contratación de personas con discapacidad y colectivos vulnerables. | Entre 6.500 € y 9.500 €, según el colectivo. |
+| **Línea 6** | Contratación de personas participantes en itinerarios de inserción. | 3.000 € a entidades de inserción. |
+
+## Requisitos de las Contrataciones
+
+- El centro de trabajo debe estar en la Comunidad de Madrid.
+- La contratación debe formalizarse en el modelo oficial de contrato.
+- La alta en Seguridad Social y el inicio de la relación laboral deben ser previos a la solicitud.
+
+## Obligaciones de los Beneficiarios
+
+| **Línea** | **Periodo mínimo de mantenimiento del contrato** |
+|----------|-----------------------------------------------|
+| **Líneas 1, 2, 4 y 5** | 12 meses (360 días). |
+| **Línea 3** | 6 meses (180 días). |
+| **Línea 6** | 6 meses con seguimiento y acompañamiento del trabajador. |
+
+## Exclusiones
+
+- No se subvencionarán contrataciones indefinidas de personas que en los 6 meses anteriores hayan trabajado en la misma empresa con contrato indefinido.
+
+## Requisitos de las Personas Contratadas
+
+| **Líneas** | **Requisitos** |
+|-----------|--------------|
+| **Líneas 1, 5 y 6** | Personas desempleadas inscritas como demandantes de empleo, salvo excepciones en Línea 5 y Línea 6 para trabajadores con discapacidad y colectivos en exclusión social. |
+| **Líneas 2, 3 y 4** | Menores de 30 años, inscritos en el Sistema Nacional de Garantía Juvenil y como demandantes de empleo. |
+| **Línea 3 (específico)** | Deben tener título universitario, grado medio/superior, máster o certificado de formación profesional. |
+| **Línea 4 (específico)** | Deben carecer de cualificación profesional para formalizar un contrato formativo. |
+
+## Documentos y Enlaces de Interés
+
+- **Modificación de Bases Reguladoras (26 de diciembre de 2024):**  
+  [BOCM - 30 de diciembre de 2024](https://www.bocm.es/boletin/CM_Orden_BOCM/2024/12/30/BOCM-20241230-21.PDF)
+- **Más información:**
+  - [Comunidad de Madrid - Ayudas e Incentivos](https://www.comunidad.madrid/servicios/empleo/ayudas-e-incentivos-empleo)
+  - [InfoSubvenciones BDNS 676689](https://www.infosubvenciones.es/bdnstrans/GE/es/convocatorias/676689)    
 {% /details %}
+{% details summary="BDNS: 689676 · Bonificaciones en las Cuotas de Seguridad Social para Desarrolladores e Investigadores" %}
+# Bonificaciones en las Cuotas de Seguridad Social para Desarrolladores e Investigadores
 
+## Información General
+
+| **Concepto**                          | **Detalle** |
+|----------------------------------------|------------|
+| **Objetivo**                           | Incentivo no tributario para la contratación y mantenimiento del empleo con dedicación exclusiva a actividades de I+D+i. |
+| **Plazo de presentación**              | Siempre abierta. Presupuesto ilimitado. |
+| **Fondos disponibles**                 | No especificado. |
+| **Ámbito de aplicación**               | Estatal. |
+| **Convocatoria**                       | [Sede electrónica](https://www.seg-social.es) |
+| **Órgano convocante**                  | Ministerio de Ciencia, Innovación y Universidades. |
+| **Entrada en vigor**                    | 1 de septiembre de 2023, según el RDL 01/2023. |
+
+## Beneficiarios
+
+| **Tipo de beneficiarios** | **Condiciones** |
+|--------------------------|----------------|
+| **Autónomos, PYMES y Empresas** | Deben contratar personal dedicado 100% a proyectos de I+D+i. |
+
+## Requisitos Generales
+
+| **Requisito** | **Descripción** |
+|--------------|----------------|
+| **Dedicación exclusiva** | El trabajador debe dedicarse **100%** a actividades de I+D+i. |
+| **Tipo de contrato** | Aplicable a contratos indefinidos, en prácticas u obra de servicio de mínimo **3 meses**. |
+| **Grupos de cotización** | Trabajadores en los grupos **1, 2, 3 y 4** del Régimen General de la Seguridad Social. |
+| **Compatibilidad** | Compatible con deducciones fiscales por I+D o IT. |
+| **Personal externo** | Aplica a personal investigador contratado para proyectos de clientes. |
+
+## Cuantía de la Ayuda
+
+| **Concepto** | **Bonificación** |
+|-------------|----------------|
+| **Bonificación base** | **40%** en las aportaciones empresariales a la Seguridad Social sobre contingencias comunes (23,6% del sueldo). |
+| **Duración máxima** | Hasta **3 años** por contrato. |
+| **Contratación de jóvenes investigadores (<30 años)** | Bonificación adicional del **5%**. |
+| **Contratación de mujeres investigadoras** | Bonificación adicional del **5%**. |
+| **Bonificaciones acumulables** | Sí, en caso de que se cumplan ambas condiciones. |
+| **Máximo por persona y año** | Puede superar los **4.000 €**. |
+
+## Gastos Cubiertos
+
+| **Concepto** | **Detalle** |
+|-------------|------------|
+| **Cuotas de Seguridad Social** | Bonificación en las aportaciones empresariales a la Seguridad Social del personal investigador. |
+| **Dedicación parcial permitida** | Se admite que hasta un **15% del tiempo** se dedique a formación, docencia o divulgación, manteniendo la exclusividad en I+D+i. |
+
+## Límites Adicionales
+
+- **Las bonificaciones, junto con otras ayudas públicas, no pueden superar el 60% del coste salarial anual** del contrato bonificado.
+
+## Consideraciones Adicionales
+
+| **Concepto** | **Detalle** |
+|-------------|------------|
+| **Número máximo de beneficiarios** | No hay límite de investigadores por empresa. |
+| **Informe motivado** | Empresas que apliquen la bonificación a **10 o más investigadores** deberán presentar un informe motivado vinculante, emitido por el MINECO y tramitado a través de una entidad certificadora. |
+
+## Enlaces de Interés
+
+- **Convocatoria y detalles**:  
+  - [Bonificaciones Seguridad Social para desarrolladores e investigadores](https://fandit.es/subvenciones/detalles-subvencion/bonificaciones-cuotas-de-la-seguridad-social-para-desarrolladores)
+  - [Normativa RD 475/2014 sobre personal investigador](https://s3.eu-west-1.amazonaws.com/media.fandit.es/files/RD_475-2014_personal_investigador.pdf)
+  - [Seguridad Social - Información y solicitud](https://www.seg-social.es)
+
+{% /details %}
 `;
+
+//     const markdown_content = `
+// # 🚀 ¡Bienvenido a Markdoc en Vite!
+
+// Este contenido está almacenado en una **variable**.
+
+// ---
+
+// - ✅ Basado en Markdown
+// - ⚡ Rápido y ligero
+// - 🔒 Seguro y controlado
+
+// ---
+
+// ## **¿Listo para probarlo?**
+
+// {% callout type="info" %}
+// Markdoc permite usar etiquetas personalizadas como esta. 
+// {% /callout %}
+
+
+// | Nombre   | Edad | Ciudad      |
+// |----------|------|------------|
+// | Ana      | 25   | Madrid     |
+// | Juan     | 30   | Barcelona  |
+// | María    | 28   | Valencia   |
+
+
+// {% details summary="Ver más información" %}
+// Aquí hay contenido oculto que se muestra cuando haces clic.
+// {% /details %}
+
+// `;
 
     // Llamada inicial al endpoint /msg/ cuando la página carga
     useEffect(() => {
@@ -152,10 +301,10 @@ Aquí hay contenido oculto que se muestra cuando haces clic.
                                 className="overflow-hidden flex flex-column"
                             >
                                 <span
-                                    className={`inline-block flex flex-row max-w-full w-[80%] ${
+                                    className={`c-chat-msg min-h-[.5rem] overflow-hidden inline-block flex flex-row max-w-full w-[85%] ${
                                         msg.sender === "user"
-                                            ? "chat-msg min-h-[.5rem] overflow-hidden flex-row-reverse text-right ml-auto my-4"
-                                            : "chat-msg min-h-[.5rem] overflow-hidden  text-left mr-auto"
+                                            ? "flex-row-reverse text-right ml-auto my-4"
+                                            : "text-left mr-auto"
                                     } break-words`}
                                 >
                                     <Avatar
@@ -179,7 +328,7 @@ Aquí hay contenido oculto que se muestra cuando haces clic.
                                     />
 
                                     <CardBody
-                                        className={`p-3 rounded-lg max-w-[100%] ${
+                                        className={`c-bubble p-3 rounded-lg max-w-[100%] ${
                                             msg.sender === "user"
                                                 ? "bg-customLightBlue text-white text-right ml-auto mt-[.1rem]"
                                                 : "bg-white text-left mr-auto mt-[.1rem]"

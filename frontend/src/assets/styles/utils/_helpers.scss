@@ -1,0 +1,13 @@
+// 🎯 Helpers Globales
+
+// Mixin para centrar elementos flexiblemente
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// Aplicar `flex-center` a una clase
+.flex-center {
+    @include flex-center;
+}

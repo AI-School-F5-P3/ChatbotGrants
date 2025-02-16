@@ -1,0 +1,79 @@
+// 🎨 Paleta de colores personalizada
+$customBlue: #0072b6;
+$custom75Blue: #278fc9;
+$custom50Blue: #84b2dc;
+$customLightBlue: #00aeef;
+$custom75LightBlue: #44c8f5;
+$custom50LightBlue: #84d0f5;
+$customGray: #666666;
+$custom75Gray: #8e8f9b;
+$custom50Gray: #b2b1bb;
+$custom10Gray: #efeff1;
+$customGreen: #00b08b;
+$customBrickRed: #dc533a;
+$customAmber: #db236d;
+
+// 🎨 Colores principales
+$text-color: rgba(255, 255, 255, 0.87);
+$white: #fff;
+$error-color: #ff0000;
+$color-black: #000;
+$color-gray-dark: #333333;
+$color-gray-light: #ccc;
+
+// 📏 Tamaños y Espaciado
+$font-size-base: 1rem;
+$line-height-base: 1.5;
+
+// 🖋 Fuentes personalizadas
+$font-domine: "Domine", serif;
+$font-lato: "Lato", sans-serif;
+$font-diodrum: "Diodrum-Regular", sans-serif;
+
+// 📌 Variables CSS en `:root`
+:root {
+    // 📌 Colores personalizados
+    --customBlue: #{$customBlue};
+    --custom75Blue: #{$custom75Blue};
+    --custom50Blue: #{$custom50Blue};
+    --customLightBlue: #{$custom75Blue};
+    --custom75LightBlue: #{$custom75LightBlue};
+    --custom50LightBlue: #{$custom50LightBlue};
+    --customGray: #{$customGray};
+    --custom75Gray: #{$custom75Gray};
+    --custom50Gray: #{$custom50Gray};
+    --custom10Gray: #{$custom10Gray};
+    --customGreen: #{$customGreen};
+    --customBrickRed: #{$customBrickRed};
+    --customAmber: #{$customAmber};
+    
+    // 🎨 Colores principales
+    --primary-color: var(--customLightBlue);
+    --secondary-color: var(--customBlue);
+    --color-placeholder: var(--primary-color);
+    --text-color: #{$text-color};
+    --white: #{$white};
+    --error-color: #{$error-color};
+    --color-black: #{$color-black};
+    --color-gray-dark: #{$color-gray-dark};
+    --color-gray-light: #{$color-gray-light};
+
+    // 📏 Tamaños y Espaciado
+    --font-size-base: #{$font-size-base};
+    --line-height-base: #{$line-height-base};
+
+    // 📌 Fondos del chat
+    --bg-user: var(--primary-color);
+    --bg-bot: var(--white);
+
+    // 📌 Colores auxiliares
+    --border-color-1: var(--white);
+    --border-color-2: var(--error-color);
+    --border-bottom-color-1: var(--error-color);
+
+    // 📌 Fuentes
+    --font-family-domine: #{$font-domine};
+    --font-family-lato: #{$font-lato};
+    --font-family-diodrum: #{$font-diodrum};
+    --font-family-base: var(--font-family-lato);
+}
