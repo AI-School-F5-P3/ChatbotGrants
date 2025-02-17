@@ -213,7 +213,7 @@ export const Logo = ({ variant }) => {
           fill="#666666"
         ></path>
       </svg>
-      <Typography className="font-dyodrum">
+      <Typography className="m-0 font-dyodrum">
         Chatbot Grants
       </Typography>
     </figure>

@@ -20,13 +20,27 @@ p {
 }
 
 ul {
-    padding-left: 1.5rem;
+    padding-left: 0;
     li {
         line-height: 1.5rem;
         margin: .5rem 0;
+        position: relative;
+        padding-left: 1.5rem;
+        &::before {
+            background: #fff;
+            border: .2rem solid #00aeef;
+            border-radius: 100%;
+            content: "";
+            display: inline-block;
+            width: .8rem;
+            height: .8rem;
+            left: 0;
+            position: absolute;
+            top: .4rem;
+        }
         &::marker {
-            content: "🔹 "; /* Emoji personalizado */
-            font-size: 1.2rem;
+            content: ""; 
+            // font-size: 1.2rem;
         }
     }
 
