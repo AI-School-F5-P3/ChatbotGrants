@@ -75,9 +75,8 @@ def get_bedrock_response(prompt: str):
     
 
 
-# CHINOS
 
-
+# Connection test only
 
 class DynamoDBManager:
     def __init__(self, table_name: str = 'grantsbot', region: str = 'eu-south-2'):
