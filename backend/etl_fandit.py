@@ -11,6 +11,120 @@ import pytz
 from typing import Dict, List, Any, Optional
 from decimal import Decimal
 
+
+# Mapeos para la transformación de datos
+# Funciones auxiliares para el mapeo
+def check_is_open(data):
+    return 1 if "abierta" in data.get('status_text', '').lower() else 0
+
+def get_nested_bdns(data):
+    return data.get('info_extra', {}).get('bdns')
+
+def get_start_date(data):
+    return data.get('fund_execution_period', {}).get('start_date')
+
+def get_end_date(data):
+    return data.get('fund_execution_period', {}).get('end_date')
+
+def get_final_start_date(data):
+    return data.get('fund_execution_period', {}).get('final_start_date')
+
+def get_final_end_date(data):
+    return data.get('fund_execution_period', {}).get('final_end_date')
+
+def get_search_tab(data):
+    return data.get('search_tab', 0)
+
+def get_provinces(data):
+    return data.get('provinces', [])
+
+def get_communities(data):
+    return data.get('communities', [])
+
+def get_applicants(data):
+    return data.get('applicants', [])
+
+def get_action_items(data):
+    return data.get('action_items', [])
+
+def get_origins(data):
+    return data.get('origins', [])
+
+def get_activities(data):
+    return data.get('activities', [])
+
+def get_region_types(data):
+    return data.get('region_types', [])
+
+def get_types(data):
+    return data.get('types', [])
+
+# Mapeos para la transformación de datos
+FUNDS_MAPPING = {
+    'slug': 'slug',
+    'title': 'formatted_title',
+    'is_open': check_is_open,
+    'max_budget': 'total_amount',
+    'bdns': get_nested_bdns,
+    'office': 'entity',
+    'publication_date': get_start_date,
+    'end_date': get_end_date,
+    'final_period_start_date': get_final_start_date,
+    'final_period_end_date': get_final_end_date,
+    'search_tab': get_search_tab,
+    'provinces': get_provinces,
+    'communities': get_communities,
+    'applicants': get_applicants,
+    'action_items': get_action_items,
+    'origins': get_origins,
+    'activities': get_activities,
+    'region_types': get_region_types,
+    'types': get_types
+}
+
+def get_submission_start(data):
+    return data.get('fund_execution_period', {}).get('submission_start')
+
+def get_submission_end(data):
+    return data.get('fund_execution_period', {}).get('submission_end')
+
+def get_funds(data):
+    return data.get('funds')
+
+def get_request_amount(data):
+    return data.get('request_amount')
+
+def get_official_info(data):
+    return data.get('info_extra', {})
+
+def get_eligible_recipients(data):
+    return data.get('applicants', [])
+
+def get_covered_expenses(data):
+    return data.get('expenses', [])
+
+def get_additional_info(data):
+    return {
+        'term': data.get('term'),
+        'help_type': data.get('help_type'),
+        'extra_info': data.get('info_extra')
+    }
+
+FUND_DETAILS_MAPPING = {
+    'fund_slug': 'slug',
+    'title': 'formatted_title',
+    'purpose': 'goal_extra',
+    'submission_period_opening': get_submission_start,
+    'submission_period_closing': get_submission_end,
+    'funds': get_funds,
+    'scope': 'scope',
+    'max_aid': get_request_amount,
+    'official_info': get_official_info,
+    'eligible_recipients': get_eligible_recipients,
+    'covered_expenses': get_covered_expenses,
+    'additional_info': get_additional_info
+}
+
 # Contador global de llamadas a la API
 api_call_counter = {
     'funds': 0,
@@ -240,7 +354,7 @@ async def get_all_funds() -> Dict[str, List[Dict[str, Any]]]:
 
 def update_fund(cursor: mysql.connector.cursor.MySQLCursor, fund_data: Dict[str, Any]) -> bool:
     """
-    Actualiza o inserta un registro de fund comparando todos los campos
+    Actualiza o inserta un registro de fund usando el mapeo definido
     """
     slug = fund_data.get('slug', '')
     
@@ -251,29 +365,23 @@ def update_fund(cursor: mysql.connector.cursor.MySQLCursor, fund_data: Dict[str,
         columns = [desc[0] for desc in cursor.description]
         result = cursor.fetchone()
         
+        # Generar new_data usando el mapeo
+        new_data = {}
+        for db_field, mapping in FUNDS_MAPPING.items():
+            if callable(mapping):
+                # Si es una función lambda
+                new_data[db_field] = mapping(fund_data)
+            else:
+                # Si es un mapeo directo
+                new_data[db_field] = fund_data.get(mapping)
+
+            # Convertir listas/diccionarios a JSON
+            if isinstance(new_data[db_field], (list, dict)):
+                new_data[db_field] = json.dumps(new_data[db_field])
+        
         if result:
             # Comparar y actualizar campos modificados
             current_data = dict(zip(columns, result))
-            new_data = {
-                'title': fund_data.get('formatted_title'),
-                'is_open': 1 if "abierta" in fund_data.get('status_text', '').lower() else 0,
-                'max_budget': fund_data.get('total_amount', 0.0),
-                'bdns': fund_data.get('bdns'),
-                'office': fund_data.get('entity'),
-                'publication_date': fund_data.get('publication_date'),
-                'end_date': fund_data.get('end_date'),
-                'final_period_start_date': fund_data.get('final_period_start_date'),
-                'final_period_end_date': fund_data.get('final_period_end_date'),
-                'search_tab': fund_data.get('search_tab', 0),
-                'provinces': json.dumps(fund_data.get('provinces', [])),
-                'communities': json.dumps(fund_data.get('communities', [])),
-                'applicants': json.dumps(fund_data.get('applicants', [])),
-                'action_items': json.dumps(fund_data.get('action_items', [])),
-                'origins': json.dumps(fund_data.get('origins', [])),
-                'activities': json.dumps(fund_data.get('activities', [])),
-                'region_types': json.dumps(fund_data.get('region_types', [])),
-                'types': json.dumps(fund_data.get('types', []))
-            }
             
             # Log para debugging de datos actuales y nuevos
             logger.debug(f"Datos actuales: {json.dumps(current_data, indent=2, default=decimal_default)}", 
@@ -338,42 +446,15 @@ def update_fund(cursor: mysql.connector.cursor.MySQLCursor, fund_data: Dict[str,
             
         else:
             # Insertar nuevo registro
-            columns = ', '.join([
-                'slug', 'title', 'is_open', 'max_budget', 'bdns', 'office',
-                'publication_date', 'end_date', 'final_period_start_date', 
-                'final_period_end_date', 'search_tab', 'provinces',
-                'communities', 'applicants', 'action_items', 'origins',
-                'activities', 'region_types', 'types'
-            ])
-            placeholders = ', '.join(['%s'] * 19)
+            columns = list(FUNDS_MAPPING.keys())
+            placeholders = ', '.join(['%s'] * len(columns))
             
             insert_sql = f"""
-            INSERT INTO funds ({columns})
+            INSERT INTO funds ({', '.join(columns)})
             VALUES ({placeholders})
             """
             
-            values = (
-                slug,
-                fund_data.get('formatted_title'),
-                1 if "abierta" in fund_data.get('status_text', '').lower() else 0,
-                fund_data.get('total_amount', 0.0),
-                fund_data.get('bdns'),
-                fund_data.get('entity'),
-                fund_data.get('publication_date'),
-                fund_data.get('end_date'),
-                fund_data.get('final_period_start_date'),
-                fund_data.get('final_period_end_date'),
-                fund_data.get('search_tab', 0),
-                json.dumps(fund_data.get('provinces', [])),
-                json.dumps(fund_data.get('communities', [])),
-                json.dumps(fund_data.get('applicants', [])),
-                json.dumps(fund_data.get('action_items', [])),
-                json.dumps(fund_data.get('origins', [])),
-                json.dumps(fund_data.get('activities', [])),
-                json.dumps(fund_data.get('region_types', [])),
-                json.dumps(fund_data.get('types', []))
-            )
-            
+            values = tuple(new_data[col] for col in columns)
             cursor.execute(insert_sql, values)
             
             logger.info(
@@ -399,7 +480,7 @@ def update_fund(cursor: mysql.connector.cursor.MySQLCursor, fund_data: Dict[str,
 
 async def update_fund_details(cursor: mysql.connector.cursor.MySQLCursor, fund_slug: str) -> bool:
     """
-    Actualiza o inserta detalles de una subvención
+    Actualiza o inserta detalles de una subvención usando el mapeo definido
     """
     try:
         global api_call_counter
@@ -419,6 +500,20 @@ async def update_fund_details(cursor: mysql.connector.cursor.MySQLCursor, fund_s
         logger.debug(f"Detalles obtenidos para {fund_slug}: {json.dumps(details, indent=2, default=decimal_default)}", 
                     extra={'operation': 'api_response', 'entity': 'fund_details', 'status': 'debug'})
 
+        # Generar new_data usando el mapeo
+        new_data = {}
+        for db_field, mapping in FUND_DETAILS_MAPPING.items():
+            if callable(mapping):
+                # Si es una función lambda
+                new_data[db_field] = mapping(details)
+            else:
+                # Si es un mapeo directo
+                new_data[db_field] = details.get(mapping)
+
+            # Convertir listas/diccionarios a JSON
+            if isinstance(new_data[db_field], (list, dict)):
+                new_data[db_field] = json.dumps(new_data[db_field])
+
         # Verificar si existe
         check_sql = "SELECT id FROM fund_details WHERE fund_slug = %s"
         cursor.execute(check_sql, (fund_slug,))
@@ -426,36 +521,14 @@ async def update_fund_details(cursor: mysql.connector.cursor.MySQLCursor, fund_s
         
         if exists:
             # Update
-            update_sql = """
+            update_fields = [f"{field} = %s" for field in new_data.keys()]
+            update_sql = f"""
             UPDATE fund_details SET
-                title = %s,
-                purpose = %s,
-                submission_period_opening = %s,
-                submission_period_closing = %s,
-                funds = %s,
-                scope = %s,
-                max_aid = %s,
-                official_info = %s,
-                eligible_recipients = %s,
-                covered_expenses = %s,
-                additional_info = %s,
+                {', '.join(update_fields)},
                 updated_at = NOW()
             WHERE fund_slug = %s
             """
-            values = (
-                details.get('title'),
-                details.get('purpose'),
-                details.get('submission_period_opening'),
-                details.get('submission_period_closing'),
-                details.get('funds'),
-                details.get('scope'),
-                details.get('max_aid'),
-                json.dumps(details.get('official_info', {}), default=decimal_default),
-                json.dumps(details.get('eligible_recipients', []), default=decimal_default),
-                json.dumps(details.get('covered_expenses', []), default=decimal_default),
-                json.dumps(details.get('additional_info', {}), default=decimal_default),
-                fund_slug
-            )
+            values = list(new_data.values()) + [fund_slug]
             cursor.execute(update_sql, values)
             
             logger.info(f"Detalles actualizados para {fund_slug}",
@@ -463,28 +536,14 @@ async def update_fund_details(cursor: mysql.connector.cursor.MySQLCursor, fund_s
             return True
         else:
             # Insert
-            insert_sql = """
+            columns = list(new_data.keys())
+            placeholders = ', '.join(['%s'] * len(columns))
+            insert_sql = f"""
             INSERT INTO fund_details (
-                fund_slug, title, purpose, submission_period_opening,
-                submission_period_closing, funds, scope, max_aid,
-                official_info, eligible_recipients, covered_expenses,
-                additional_info
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                {', '.join(columns)}
+            ) VALUES ({placeholders})
             """
-            values = (
-                fund_slug,
-                details.get('title'),
-                details.get('purpose'),
-                details.get('submission_period_opening'),
-                details.get('submission_period_closing'),
-                details.get('funds'),
-                details.get('scope'),
-                details.get('max_aid'),
-                json.dumps(details.get('official_info', {}), default=decimal_default),
-                json.dumps(details.get('eligible_recipients', []), default=decimal_default),
-                json.dumps(details.get('covered_expenses', []), default=decimal_default),
-                json.dumps(details.get('additional_info', {}), default=decimal_default)
-            )
+            values = list(new_data.values())
             
             cursor.execute(insert_sql, values)
             
