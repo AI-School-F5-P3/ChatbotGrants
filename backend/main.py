@@ -10,7 +10,7 @@ from threading import Lock
 import queue
 from datetime import datetime, timedelta
 
-app = FastAPI(root_path="/api")  # 🔹 Indica que todas las rutas estarán bajo `/api`
+app = FastAPI(root_path="/api")
 
 # Configure CORS
 app.add_middleware(
