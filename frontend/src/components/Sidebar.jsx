@@ -20,7 +20,7 @@ export function Sidebar() {
     setOpen(open === value ? 0 : value);
   };
   return (
-    <Card className="sidebar h-[calc(100vh-7rem)] w-full max-w-[18rem] p-4 shadow-xl shadow-blue-gray-900/5 rounded-none border-r border-solid border-custom10Gray">
+    <Card className="sidebar h-[calc(100vh-7rem)] w-full  min-w-[250px] max-w-[18rem] p-4 shadow-xl shadow-blue-gray-900/5 rounded-none border-r border-solid border-custom10Gray">
       <div className="flex flex-row flex-wrap items-center justify-center p-2 pt-5">
         <Button
           variant="outlined"

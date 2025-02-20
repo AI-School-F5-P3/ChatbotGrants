@@ -1,0 +1,13 @@
+@use "../base/variables" as *; // Importa variables
+.footer {
+    background: var(--secondary-color);
+    color: var(--white);
+    font-size: 1.8rem;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    p {
+        margin: 0;
+    }
+}

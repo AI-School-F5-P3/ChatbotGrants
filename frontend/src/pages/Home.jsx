@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
-import "../app.css";
+// import "../app.css";
 import { Logo } from "../components/Logo.jsx";
 import classNames from "classnames";
 

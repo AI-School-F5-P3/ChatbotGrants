@@ -6,7 +6,8 @@ import { router } from './router/Router'
 
 import { ThemeProvider } from '@material-tailwind/react';
 
-import './index.css';
+// import './index.css';
+import "./assets/styles/main.scss"; 
 
 
 createRoot(document.getElementById('root')).render(

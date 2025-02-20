@@ -18,8 +18,7 @@ class State(TypedDict):
 class GrantsBot:
     def __init__(self):
         self.FIELDS = [
-            ("Nombre del cliente", "Por favor, ¿podrías decirme el nombre de la Empresa?"),
-            ("Comunidad Autónoma", "Gracias. ¿En qué Comunidad Autónoma está ?"),
+            ("Comunidad Autónoma", "Por favor, ¿podrías decirme en qué Comunidad Autónoma está el cliente ?"),
             ("Tipo de Empresa", "¿Cuál es el tipo de empresa? (Autónomo, PYME, Gran Empresa)"),
             ("Presupuesto del Proyecto", "¿Cuál es el presupuesto aproximado del proyecto?")
         ]
@@ -44,6 +43,8 @@ class GrantsBot:
             self.should_review_grant,
             {True: "review_grant", False: END}
         )
+
+      
 
         self.graph = self.graph_builder.compile()
 
@@ -70,7 +71,7 @@ class GrantsBot:
         
         if not messages:
             messages.extend([
-                {"role": "assistant", "content": "¡Hola! Soy un asistente virtual para ayudarte a encontrar subvenciones. Voy a hacerte algunas preguntas "+ self.FIELDS[0][1]}
+                {"role": "assistant", "content": "¡Hola! Soy un asistente virtual para ayudarte a encontrar subvenciones. Voy a hacerte algunas preguntas. "+ self.FIELDS[0][1]}
             ])
             return {"messages": messages, "user_info": user_info, "info_complete": False}
 
@@ -106,7 +107,7 @@ class GrantsBot:
                 state["selected_grant"] = best_grant
                 prompt = f"""
                 Based on the user's information:
-                Company: {user_info['Nombre del cliente']}
+                
                 Region: {user_info['Comunidad Autónoma']}
                 Type: {user_info['Tipo de Empresa']}
                 Budget: {user_info['Presupuesto del Proyecto']}
@@ -114,13 +115,17 @@ class GrantsBot:
                 I found the following grants:
                 {best_grant}
 
-                Please present a summary of the grants to the user in a natural way in Spanish and ask if they would like to know more details or explore other options.
+                Please present a summary of the grants to the user in a concise way in Spanish and ask if they would like to know more details or explore other options.
+                Your answer in markdown format.
                 """
                 response = get_bedrock_response(prompt)
                 messages.append({"role": "assistant", "content": response["content"][0]["text"]})
                 return {**state, "messages": messages}
 
-        # For follow-up questions, only process the last user message
+        # For follow-up questions, add more context
+        last_2_messages = messages[-3:-1]
+        context_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in last_2_messages])
+
         last_message = messages[-1]
         if last_message["role"] == "user":
             if "revisar" in last_message["content"].lower():
@@ -131,7 +136,10 @@ class GrantsBot:
             dialogue_prompt = f"""
             The user has asked: {last_message['content']}
             Context: {selected_grant}
+            Previous conversation (last 2 messages): {context_messages}
             Please respond in Spanish about this specific question. If the user asks anything not related to the grant, politely conduct the conversation back to the grant.
+            Be concise and your answer in markdown format.
+
             """
             response = get_bedrock_response(dialogue_prompt)
             response_content = response["content"][0]["text"]
@@ -182,9 +190,8 @@ class GrantsBot:
                     4. Plazos importantes
                     5. Documentación necesaria
 
-                    Termina preguntando si quieren:
-                    1. Buscar otra subvención (sugiere palabras como 'nueva búsqueda' o 'buscar otra')
-                    2. Finalizar la consulta (sugiere palabras como 'terminar' o 'fin')
+                    Termina preguntando si tiene alguna otra consulta
+                    Tu respuesta en formato markdown
                     """
                     
                     response = get_bedrock_response(prompt)
@@ -216,15 +223,20 @@ class GrantsBot:
                 state["discuss_grant"] = False
                 messages.append({
                     "role": "assistant",
-                    "content": "¡Gracias por usar nuestro servicio! Si necesitas más información sobre subvenciones en el futuro, no dudes en volver a consultarme."
+                    "content": "¡Gracias. Si necesitas más información sobre subvenciones en el futuro, no dudes en volver a consultarme."
                 })
                 return {**state, "messages": messages}
             
-            # Handle regular dialogue about the grant
+            # Handle regular dialogue about the grant. For follow-up questions, add more context
+            last_2_messages = messages[-3:-1]
+            context_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in last_2_messages])
+
             dialogue_prompt = f"""
             The user has asked: {last_message['content']}
             Context: {grant_details}
+            Previous conversation (last 2 messages): {context_messages}
             Please respond in Spanish about this specific question. If the user asks anything not related to the grant, politely conduct the conversation back to the grant details.
+            Your response in markdown format.
             """
             response = get_bedrock_response(dialogue_prompt)
             response_content = response["content"][0]["text"]
