@@ -6,28 +6,30 @@ from datetime import datetime
 import aiohttp
 from dotenv import load_dotenv
 
+#Script que descarga json con subvenciones de la API de Fandit y las guarda en un archivo JSON.
+#Última version actualizada al 2025-02-20
+
 from clase_apifandit import FanditAPI
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-async def descargar_subvenciones(api, paginas_a_descargar=5):
+async def descargar_subvenciones(api, paginas_a_descargar=None):
     """
     Descarga subvenciones de la API de Fandit y las guarda en un archivo JSON.
     
     :param api: Instancia de FanditAPI
-    :param paginas_a_descargar: Número de páginas a descargar (por defecto 5)
+    :param paginas_a_descargar: Número de páginas a descargar (None para todas)
     :return: Lista completa de subvenciones
     """
     todas_subvenciones = []
     
-    # Filtros base (puedes modificarlos según tus necesidades)
     filtros_base = {
         "is_open": True,
-        "start_date": "2024-01-01",
-        "end_date": "2025-12-31",
-        "final_period_start_date": "2024-01-01",
-        "final_period_end_date": "2025-12-31",
+        "start_date": None,
+        "end_date": None,
+        "final_period_start_date": None,
+        "final_period_end_date": None,
         "provinces": [],
         "applicants": [],
         "communities": [],
@@ -38,25 +40,46 @@ async def descargar_subvenciones(api, paginas_a_descargar=5):
         "types": []
     }
     
-    for pagina in range(1, paginas_a_descargar + 1):
-        print(f"Descargando página {pagina}...")
+    # Obtener primera página para ver el total
+    primera_respuesta = await api.obtener_lista_subvenciones(page=1, request_data=filtros_base)
+    if not primera_respuesta:
+        print("No se pudo obtener la primera página")
+        return []
         
-        # Obtener subvenciones de la API
+    total_registros = primera_respuesta.get('count', 0)
+    registros_por_pagina = len(primera_respuesta.get('results', []))
+    total_paginas = -(-total_registros // registros_por_pagina)  # Redondeo hacia arriba
+    
+    print(f"Total de registros disponibles: {total_registros}")
+    print(f"Registros por página: {registros_por_pagina}")
+    print(f"Total de páginas: {total_paginas}")
+    
+    # Añadir resultados de la primera página
+    todas_subvenciones.extend(primera_respuesta.get('results', []))
+    
+    # Descargar el resto de páginas
+    max_paginas = paginas_a_descargar if paginas_a_descargar else total_paginas
+    for pagina in range(2, max_paginas + 1):
+        print(f"Descargando página {pagina} de {max_paginas}...")
+        
         respuesta = await api.obtener_lista_subvenciones(page=pagina, request_data=filtros_base)
-        
-        # Verificar si hay datos en la respuesta
         if respuesta and 'results' in respuesta:
             subvenciones_pagina = respuesta['results']
             todas_subvenciones.extend(subvenciones_pagina)
             
-            # Si no hay más resultados, salir del bucle
             if not respuesta.get('next'):
+                print("No hay más páginas disponibles")
                 break
         else:
             print(f"No se encontraron resultados en la página {pagina}")
             break
+            
+        # Pequeña pausa para no sobrecargar la API
+        await asyncio.sleep(0.5)
     
+    print(f"Total de subvenciones descargadas: {len(todas_subvenciones)}")
     return todas_subvenciones
+
 
 async def obtener_detalles_subvenciones(api, subvenciones):
     """
@@ -117,8 +140,8 @@ async def main():
     api = FanditAPI(
         token=token, 
         expert_token=expert_token, 
-        email=email,  # Añadir email si está disponible
-        password=password  # Añadir password si está disponible
+        email=email,  
+        password=password  
     )
     
     try:
@@ -126,8 +149,8 @@ async def main():
         if email and password:
             await api.refrescar_token()
         
-        # 1. Descargar lista de subvenciones
-        subvenciones = await descargar_subvenciones(api)
+        # 1. Descargar lista de subvenciones (todas las páginas)
+        subvenciones = await descargar_subvenciones(api, paginas_a_descargar=None)
         print(f"Total de subvenciones base descargadas: {len(subvenciones)}")
         
         # Verificar si se descargaron subvenciones

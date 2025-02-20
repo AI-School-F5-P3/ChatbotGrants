@@ -119,10 +119,10 @@ if __name__ == "__main__":
     print("\n=== Prueba del endpoint /funds/ (Lista de Subvenciones) ===")
     filtros_subvenciones = {
         "is_open": True,
-        "start_date": "2025-01-01",
-        "end_date": "2025-03-30",
-        "final_period_start_date": "2025-01-01",
-        "final_period_end_date": "2025-04-30",
+        "start_date": None, "2025-01-01"
+        "end_date": None, "2025-03-30"
+        "final_period_start_date": None, "2025-01-01"
+        "final_period_end_date": None,"2025-04-30"
         "provinces": [],
         "applicants": [],
         "communities": [],
