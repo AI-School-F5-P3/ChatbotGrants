@@ -124,13 +124,13 @@ ol > li {
 ul {
   padding-left: 0;
 }
-ul li {
+ul > li {
   line-height: 1.5rem;
   margin: 0.5rem 0;
   position: relative;
-  padding-left: 1.2rem;
+  padding-left: 1.5rem;
 }
-ul li::before {
+ul > li::before {
   background: #fff;
   border: 0.15rem solid #00aeef;
   border-radius: 100%;
@@ -142,12 +142,24 @@ ul li::before {
   position: absolute;
   top: 0.55rem;
 }
-ul li::marker {
+ul > li::marker {
   content: "";
 }
+ul ul {
+  list-style: disc;
+}
+ul ul li {
+  line-height: 1.5rem;
+  margin: 0.5rem 0.5rem;
+  position: relative;
+  padding-left: 1rem;
+}
 ul ul li::marker {
-  content: "➥ "; /* Emoji personalizado */
-  font-size: 1.2rem;
+  content: "●";
+  color: var(--primary-color);
+}
+ul ul li::before {
+  content: none;
 }
 
 hr {
@@ -156,6 +168,17 @@ hr {
 
 a {
   color: var(--primary-color);
+}
+
+details {
+  padding: 0.8rem 1.4rem !important;
+  border: 1px solid var(--custom10Gray) !important;
+}
+
+summary + div {
+  border-top: 1px solid var(--custom10Gray);
+  margin-top: 1rem;
+  padding-top: 1.5rem;
 }
 
 body {
