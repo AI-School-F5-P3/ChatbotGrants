@@ -1,0 +1,27 @@
+@use "../base/variables" as *;
+
+figure.logo-white {
+  width: 100%;
+  height: 6.3rem;
+  margin-bottom: 0.5rem;
+
+  svg {
+    width: 10rem;
+
+    path {
+      fill: var(--white);
+    }
+  }
+
+  p {
+    font-size: 1.4rem;
+  }
+}
+
+figure.logo-default {
+  color: var(--primary-color);
+
+  svg {
+    height: 3rem;
+  }
+}

@@ -1,0 +1,31 @@
+@use "../base/variables" as *;
+
+.input-field {
+  height: 3rem;
+  color: var(--white);
+  border-color: var(--white) !important;
+
+  &.error {
+    border-color: var(--error-color) !important;
+  }
+
+  &:focus {
+    border-top: none;
+  }
+
+  &:-internal-autofill-selected {
+    color: var(--white) !important;
+    box-shadow: 0 0 1000px var(--primary-color) inset !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--white) !important;
+  }
+  &:autofill {
+    color: var(--white) !important;
+    box-shadow: 0 0 1000px var(--primary-color) inset !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--white) !important;
+  }
+  &.peer.error:focus ~ .peer-focus\:after\:border-white::after{
+    border-bottom-color: red;
+  } 
+}

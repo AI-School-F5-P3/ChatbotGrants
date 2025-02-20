@@ -1,0 +1,13 @@
+:root {
+    font-family: Lato, Arial, sans-serif;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+    font-weight: 400;
+    color-scheme: light;
+    color: $text-color;
+    background-color: var(--primary-color);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

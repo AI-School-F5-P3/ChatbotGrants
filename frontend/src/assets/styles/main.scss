@@ -1,0 +1,39 @@
+// // Tailwind
+// @import "utils/tailwind";
+
+// // Base
+// @import "base/variables";
+// @import "base/mixins";
+// @import "base/typography";
+
+// // Layout
+// @import "layout/body";
+// @import "layout/grid";
+// @import "layout/header";
+// @import "layout/footer";
+
+// // Componentes
+// @import "components/buttons";
+// @import "components/inputs";
+// @import "components/chat";
+
+// // Utilidades
+// @import "utils/animations";
+// @import "utils/helpers";
+
+
+// Tailwind
+@use "utils";
+
+// Base
+@use "base";
+
+// // Layout
+@use "layout";
+
+// // Componentes
+@use "components";
+
+// // Utilidades
+@use "utils/animations";
+@use "utils/helpers";
