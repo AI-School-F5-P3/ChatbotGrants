@@ -8,12 +8,20 @@ h1 {
 }
 
 h2 {
-    font-size: 1.4rem;
-    line-height: 2.5rem;
-    margin-top: 2rem;
-    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+    line-height: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: .5rem;
     font-weight: 900;
     font-family: Domine, Arial, sans-serif;
+    color: var(--secondary-color);
+}
+
+h3{
+    font-size: 1rem;
+    line-height: 1.5rem;
+    margin-top: 1rem;
+    font-weight: 900;
     color: var(--secondary-color);
 }
 
