@@ -19,6 +19,20 @@ services:
       - backend-api
     networks:
       - app-network
+      
+  etl-fandit:
+    container_name: etl-fandit
+    build:
+      context: ./etl-fandit
+    volumes:
+      - ./etl-fandit/output:/app/output
+      - ./etl-fandit/logs:/app/logs
+    environment:
+      - TZ=Europe/Madrid
+      - ENABLE_AUTO_ETL=false  # Cambiar a "true" para activar la ejecución automática
+    restart: unless-stopped
+    networks:
+      - app-network
 
 networks:
   app-network:
