@@ -1,644 +1,404 @@
 import asyncio
 import json
-import mysql.connector
-import logging
-from logging.handlers import RotatingFileHandler
-from datetime import datetime, date, time
 import os
+import logging
+from datetime import datetime
+import mysql.connector
 from dotenv import load_dotenv
 from clase_apifandit import FanditAPI
-import pytz
-from typing import Dict, List, Any, Optional
-from decimal import Decimal
 
-
-# Mapeos para la transformación de datos
-# Funciones auxiliares para el mapeo
-def check_is_open(data):
-    return 1 if "abierta" in data.get('status_text', '').lower() else 0
-
-def get_nested_bdns(data):
-    return data.get('info_extra', {}).get('bdns')
-
-def get_start_date(data):
-    return data.get('fund_execution_period', {}).get('start_date')
-
-def get_end_date(data):
-    return data.get('fund_execution_period', {}).get('end_date')
-
-def get_final_start_date(data):
-    return data.get('fund_execution_period', {}).get('final_start_date')
-
-def get_final_end_date(data):
-    return data.get('fund_execution_period', {}).get('final_end_date')
-
-def get_search_tab(data):
-    return data.get('search_tab', 0)
-
-def get_provinces(data):
-    return data.get('provinces', [])
-
-def get_communities(data):
-    return data.get('communities', [])
-
-def get_applicants(data):
-    return data.get('applicants', [])
-
-def get_action_items(data):
-    return data.get('action_items', [])
-
-def get_origins(data):
-    return data.get('origins', [])
-
-def get_activities(data):
-    return data.get('activities', [])
-
-def get_region_types(data):
-    return data.get('region_types', [])
-
-def get_types(data):
-    return data.get('types', [])
-
-# Mapeos para la transformación de datos
-FUNDS_MAPPING = {
-    'slug': 'slug',
-    'title': 'formatted_title',
-    'is_open': check_is_open,
-    'max_budget': 'total_amount',
-    'bdns': get_nested_bdns,
-    'office': 'entity',
-    'publication_date': get_start_date,
-    'end_date': get_end_date,
-    'final_period_start_date': get_final_start_date,
-    'final_period_end_date': get_final_end_date,
-    'search_tab': get_search_tab,
-    'provinces': get_provinces,
-    'communities': get_communities,
-    'applicants': get_applicants,
-    'action_items': get_action_items,
-    'origins': get_origins,
-    'activities': get_activities,
-    'region_types': get_region_types,
-    'types': get_types
-}
-
-def get_submission_start(data):
-    return data.get('fund_execution_period', {}).get('submission_start')
-
-def get_submission_end(data):
-    return data.get('fund_execution_period', {}).get('submission_end')
-
-def get_funds(data):
-    return data.get('funds')
-
-def get_request_amount(data):
-    return data.get('request_amount')
-
-def get_official_info(data):
-    return data.get('info_extra', {})
-
-def get_eligible_recipients(data):
-    return data.get('applicants', [])
-
-def get_covered_expenses(data):
-    return data.get('expenses', [])
-
-def get_additional_info(data):
-    return {
-        'term': data.get('term'),
-        'help_type': data.get('help_type'),
-        'extra_info': data.get('info_extra')
-    }
-
-FUND_DETAILS_MAPPING = {
-    'fund_slug': 'slug',
-    'title': 'formatted_title',
-    'purpose': 'goal_extra',
-    'submission_period_opening': get_submission_start,
-    'submission_period_closing': get_submission_end,
-    'funds': get_funds,
-    'scope': 'scope',
-    'max_aid': get_request_amount,
-    'official_info': get_official_info,
-    'eligible_recipients': get_eligible_recipients,
-    'covered_expenses': get_covered_expenses,
-    'additional_info': get_additional_info
-}
-
-# Contador global de llamadas a la API
-api_call_counter = {
-    'funds': 0,
-    'fund_details': 0,
-    'total': 0
-}
-
-def decimal_default(obj):
-    """
-    Función auxiliar para serializar objetos Decimal y otros tipos especiales
-    """
-    try:
-        if isinstance(obj, Decimal):
-            return float(obj)
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, bytes):
-            return obj.decode('utf-8')
-        elif isinstance(obj, (date, time)):
-            return str(obj)
-        
-        # Log para tipos no manejados explícitamente
-        logger.debug(f"Convirtiendo tipo no manejado a string: {type(obj)}", 
-                    extra={'operation': 'serialize', 'entity': 'json', 'status': 'warning'})
-        return str(obj)
-    except Exception as e:
-        logger.error(f"Error serializando objeto de tipo {type(obj)}: {str(e)}", 
-                    extra={'operation': 'serialize', 'entity': 'json', 'status': 'error'})
-        return str(obj)
-
-def setup_enhanced_logging():
-    """
-    Configura logging avanzado con rotación y monitoreo detallado
-    """
-    log_formatter = logging.Formatter(
-        '%(asctime)s [%(levelname)s] - '
-        'Operation: %(operation)s - '
-        'Entity: %(entity)s - '
-        'Status: %(status)s - '
-        'Details: %(message)s'
-    )
-
-    # Log file con rotación
-    file_handler = RotatingFileHandler(
-        'etl_fandit.log',
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5
-    )
-    file_handler.setFormatter(log_formatter)
-
-    # Console handler para debugging
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
-
-    # Debug file handler para información detallada
-    debug_handler = RotatingFileHandler(
-        'etl_fandit_debug.log',
-        maxBytes=20*1024*1024,  # 20MB
-        backupCount=3
-    )
-    debug_handler.setFormatter(log_formatter)
-    debug_handler.setLevel(logging.DEBUG)
-
-    # Configurar logger
-    logger = logging.getLogger('etl_fandit')
-    logger.setLevel(logging.DEBUG)  
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    logger.addHandler(debug_handler)
-
-    return logger
-
-# Configuración global
-load_dotenv()
-logger = setup_enhanced_logging()
-
-# Configuración de la base de datos
-DB_CONFIG = {
-    'host': os.getenv("AURORA_CLUSTER_ENDPOINT"),
-    'user': os.getenv("DB_USER"),
-    'password': os.getenv("DB_PASSWORD"),
-    'database': 'fandit_db'
-}
-
-# Inicializar API Fandit
-api = FanditAPI(
-    token=os.getenv("FANDIT_TOKEN"),
-    expert_token=os.getenv("FANDIT_EXPERT_TOKEN")
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("etl_fandit.log"),
+        logging.StreamHandler()
+    ]
 )
+logger = logging.getLogger("ETL_Fandit")
 
-async def validate_api_response(response: Dict[str, Any]) -> bool:
-    """
-    Valida la estructura y contenido de las respuestas de la API
-    """
+# Cargar variables de entorno
+load_dotenv()
+
+def connect_db():
+    """Establece conexión con la base de datos grants_db"""
     try:
-        if not response or 'results' not in response:
-            logger.error("API no devuelve estructura esperada", 
-                        extra={'operation': 'validate', 'entity': 'api', 'status': 'error'})
-            return False
-            
-        # Log de la estructura completa de respuesta para debugging
-        logger.debug(f"Estructura de respuesta API: {json.dumps(response, indent=2, default=decimal_default)}", 
-                    extra={'operation': 'validate', 'entity': 'api', 'status': 'debug'})
-            
-        # Validar estructura de cada registro
-        for fund in response['results'][:1]:  # Analizar primer registro
-            logger.info("Validando estructura de registro", 
-                       extra={'operation': 'validate', 'entity': 'fund', 'status': 'processing'})
-            
-            # Validar campos requeridos actualizados
-            required_fields = ['formatted_title', 'status_text', 'total_amount', 'slug']
-            missing_fields = [f for f in required_fields if f not in fund]
-            if missing_fields:
-                logger.error(f"Campos requeridos faltantes: {missing_fields}", 
-                           extra={'operation': 'validate', 'entity': 'fund', 'status': 'error'})
-                logger.debug(f"Registro con campos faltantes: {json.dumps(fund, indent=2, default=decimal_default)}", 
-                           extra={'operation': 'validate', 'entity': 'fund', 'status': 'debug'})
-            
-            # Validar arrays JSON
-            json_fields = ['provinces', 'communities', 'applicants', 'action_items', 
-                         'origins', 'activities', 'region_types', 'types']
-            for field in json_fields:
-                if field in fund and not isinstance(fund[field], list):
-                    logger.error(f"Campo {field} no es un array", 
-                               extra={'operation': 'validate', 'entity': 'fund', 'status': 'error'})
-                    logger.debug(f"Valor de {field}: {fund.get(field)}", 
-                               extra={'operation': 'validate', 'entity': 'fund', 'status': 'debug'})
-                    
-            # Validar fechas
-            date_fields = ['publication_date', 'end_date', 'final_period_start_date', 
-                         'final_period_end_date']
-            for field in date_fields:
-                if field in fund and fund[field]:
-                    try:
-                        datetime.strptime(fund[field], '%Y-%m-%d')
-                    except:
-                        logger.error(f"Campo {field} no tiene formato de fecha válido", 
-                                   extra={'operation': 'validate', 'entity': 'fund', 'status': 'error'})
-                        logger.debug(f"Valor de {field}: {fund.get(field)}", 
-                                   extra={'operation': 'validate', 'entity': 'fund', 'status': 'debug'})
-
-        return True
-
-    except Exception as e:
-        logger.error(f"Error en validación: {str(e)}", 
-                    extra={'operation': 'validate', 'entity': 'api', 'status': 'error'})
-        return False
-
-async def get_all_funds() -> Dict[str, List[Dict[str, Any]]]:
-    """
-    Obtiene todas las subvenciones disponibles de la API incluyendo paginación
-    """
-    try:
-        global api_call_counter
-        all_results = []
-        page = 1
-        has_more = True
-        
-        request_data = {
-            "is_open": True,  # Solo subvenciones abiertas
-            "start_date": None,
-            "end_date": None,
-            "provinces": [],
-            "applicants": [],
-            "communities": [],
-            "action_items": [],
-            "origins": [],
-            "activities": [],
-            "region_types": [],
-            "types": []
-        }
-        
-        logger.info("Iniciando obtención de subvenciones", 
-                   extra={'operation': 'api_request', 'entity': 'funds', 'status': 'start'})
-
-        while has_more:
-            api_call_counter['funds'] += 1
-            api_call_counter['total'] += 1
-            logger.info(f"Llamada API #{api_call_counter['funds']} a /funds/", 
-                       extra={'operation': 'api_call', 'entity': 'funds', 'status': 'info'})
-            
-            response = await api.obtener_lista_subvenciones(page=page, request_data=request_data)
-            
-            if not response or 'results' not in response:
-                logger.error(f"Error en respuesta de API página {page}", 
-                           extra={'operation': 'api_error', 'entity': 'funds', 'status': 'error'})
-                break
-
-            # Log de respuesta completa para debugging
-            logger.debug(f"Respuesta API página {page}: {json.dumps(response, indent=2, default=decimal_default)}", 
-                        extra={'operation': 'api_response', 'entity': 'funds', 'status': 'debug'})
-
-            if page == 1:  # Solo en la primera página
-                logger.info(f"Total de subvenciones abiertas encontradas: {response.get('count', 0)}", 
-                          extra={'operation': 'api_request', 'entity': 'funds', 'status': 'info'})
-
-            # Validar respuesta
-            if not await validate_api_response(response):
-                logger.error(f"Validación falló para página {page}", 
-                           extra={'operation': 'validate', 'entity': 'funds', 'status': 'error'})
-                break
-
-            results = response.get('results', [])
-            all_results.extend(results)
-            
-            # Verificar si hay más páginas
-            next_page = response.get('next')
-            has_more = next_page is not None
-            
-            if has_more:
-                page += 1
-                logger.info(f"Procesando página {page} de {response.get('count', 0)} registros totales", 
-                          extra={'operation': 'pagination', 'entity': 'funds', 'status': 'info'})
-            
-            logger.info(f"Página {page} procesada. Registros acumulados: {len(all_results)}", 
-                       extra={'operation': 'pagination', 'entity': 'funds', 'status': 'success'})
-
-        logger.info(f"Total de registros obtenidos: {len(all_results)}", 
-                   extra={'operation': 'complete', 'entity': 'funds', 'status': 'success'})
-        
-        return {'results': all_results}
-
-    except Exception as e:
-        logger.error(f"Error obteniendo subvenciones: {str(e)}", 
-                    extra={'operation': 'api_error', 'entity': 'funds', 'status': 'error'})
-        raise
-
-def update_fund(cursor: mysql.connector.cursor.MySQLCursor, fund_data: Dict[str, Any]) -> bool:
-    """
-    Actualiza o inserta un registro de fund usando el mapeo definido
-    """
-    slug = fund_data.get('slug', '')
-    
-    try:
-        # Obtener registro actual si existe
-        check_sql = "SELECT * FROM funds WHERE slug = %s"
-        cursor.execute(check_sql, (slug,))
-        columns = [desc[0] for desc in cursor.description]
-        result = cursor.fetchone()
-        
-        # Generar new_data usando el mapeo
-        new_data = {}
-        for db_field, mapping in FUNDS_MAPPING.items():
-            if callable(mapping):
-                # Si es una función lambda
-                new_data[db_field] = mapping(fund_data)
-            else:
-                # Si es un mapeo directo
-                new_data[db_field] = fund_data.get(mapping)
-
-            # Convertir listas/diccionarios a JSON
-            if isinstance(new_data[db_field], (list, dict)):
-                new_data[db_field] = json.dumps(new_data[db_field])
-        
-        if result:
-            # Comparar y actualizar campos modificados
-            current_data = dict(zip(columns, result))
-            
-            # Log para debugging de datos actuales y nuevos
-            logger.debug(f"Datos actuales: {json.dumps(current_data, indent=2, default=decimal_default)}", 
-                        extra={'operation': 'check', 'entity': 'funds', 'status': 'debug'})
-            logger.debug(f"Datos nuevos: {json.dumps(new_data, indent=2, default=decimal_default)}", 
-                        extra={'operation': 'check', 'entity': 'funds', 'status': 'debug'})
-            
-            # Detectar cambios
-            changes = []
-            update_fields = []
-            update_values = []
-            
-            for field, new_value in new_data.items():
-                current_value = current_data.get(field)
-                
-                # Convertir bytes a string para comparación
-                if isinstance(current_value, bytes):
-                    current_value = current_value.decode('utf-8')
-                
-                # Convertir Decimal a float para comparación
-                if isinstance(current_value, Decimal):
-                    current_value = float(current_value)
-                
-                if new_value != current_value:
-                    update_fields.append(f"{field} = %s")
-                    update_values.append(new_value)
-                    changes.append({
-                        'field': field,
-                        'old': current_value,
-                        'new': new_value
-                    })
-            
-            if changes:
-                # Actualizar registro
-                update_sql = f"""
-                UPDATE funds SET 
-                    {', '.join(update_fields)},
-                    updated_at = NOW()
-                WHERE slug = %s
-                """
-                update_values.append(slug)
-                cursor.execute(update_sql, tuple(update_values))
-                
-                # Registrar cada cambio en el log
-                for change in changes:
-                    logger.info(
-                        f"Campo '{change['field']}' cambió de '{change['old']}' a '{change['new']}'",
-                        extra={
-                            'operation': 'update',
-                            'entity': f'funds/{slug}',
-                            'status': 'success'
-                        }
-                    )
-                
-                return True
-            
-            logger.info(
-                "No se detectaron cambios",
-                extra={'operation': 'check', 'entity': f'funds/{slug}', 'status': 'unchanged'}
-            )
-            return False
-            
-        else:
-            # Insertar nuevo registro
-            columns = list(FUNDS_MAPPING.keys())
-            placeholders = ', '.join(['%s'] * len(columns))
-            
-            insert_sql = f"""
-            INSERT INTO funds ({', '.join(columns)})
-            VALUES ({placeholders})
-            """
-            
-            values = tuple(new_data[col] for col in columns)
-            cursor.execute(insert_sql, values)
-            
-            logger.info(
-                f"Nueva subvención creada",
-                extra={
-                    'operation': 'insert',
-                    'entity': f'funds/{slug}',
-                    'status': 'success'
-                }
-            )
-            return True
-            
-    except Exception as e:
-        logger.error(
-            f"Error procesando subvención: {str(e)}",
-            extra={
-                'operation': 'error',
-                'entity': f'funds/{slug}',
-                'status': 'error'
-            }
+        conn = mysql.connector.connect(
+            host=os.getenv('AURORA_CLUSTER_ENDPOINT'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            database='grants_db'
         )
+        logger.info("Conexión a la base de datos establecida correctamente")
+        return conn
+    except mysql.connector.Error as err:
+        logger.error(f"Error al conectar a la base de datos: {err}")
         raise
 
-async def update_fund_details(cursor: mysql.connector.cursor.MySQLCursor, fund_slug: str) -> bool:
+def get_existing_grants(cursor):
     """
-    Actualiza o inserta detalles de una subvención usando el mapeo definido
+    Obtiene todos los grants existentes en la base de datos
+    Retorna un diccionario {slug: {datos completos}}
     """
-    try:
-        global api_call_counter
-        api_call_counter['fund_details'] += 1
-        api_call_counter['total'] += 1
+    # Obtener todos los grants
+    query = "SELECT * FROM grants"
+    cursor.execute(query)
+    
+    # Obtener nombres de columnas
+    column_names = [column[0] for column in cursor.description]
+    
+    # Crear diccionario de grants existentes
+    existing_grants = {}
+    for row in cursor.fetchall():
+        # Convertir la fila a un diccionario
+        grant_dict = dict(zip(column_names, row))
+        existing_grants[grant_dict['slug']] = grant_dict
+    
+    logger.info(f"Se encontraron {len(existing_grants)} grants existentes en la base de datos")
+    return existing_grants
+
+async def descargar_subvenciones(api, paginas_a_descargar=None):
+    """
+    Descarga subvenciones de la API de Fandit.
+    
+    :param api: Instancia de FanditAPI
+    :param paginas_a_descargar: Número de páginas a descargar (None para todas)
+    :return: Lista completa de subvenciones
+    """
+    todas_subvenciones = []
+    
+    filtros_base = {
+        "is_open": True,
+        "start_date": None,
+        "end_date": None,
+        "final_period_start_date": None,
+        "final_period_end_date": None,
+        "provinces": [],
+        "applicants": [],
+        "communities": [],
+        "action_items": [],
+        "origins": [],
+        "activities": [],
+        "region_types": [],
+        "types": []
+    }
+    
+    # Obtener primera página para ver el total
+    primera_respuesta = await api.obtener_lista_subvenciones(page=1, request_data=filtros_base)
+    if not primera_respuesta:
+        logger.error("No se pudo obtener la primera página")
+        return []
         
-        logger.info(f"Llamada API #{api_call_counter['fund_details']} a /fund-details/", 
-                   extra={'operation': 'api_call', 'entity': 'fund_details', 'status': 'info'})
+    total_registros = primera_respuesta.get('count', 0)
+    registros_por_pagina = len(primera_respuesta.get('results', []))
+    total_paginas = -(-total_registros // registros_por_pagina)  # Redondeo hacia arriba
+    
+    logger.info(f"Total de registros disponibles: {total_registros}")
+    logger.info(f"Registros por página: {registros_por_pagina}")
+    logger.info(f"Total de páginas: {total_paginas}")
+    
+    # Añadir resultados de la primera página
+    todas_subvenciones.extend(primera_respuesta.get('results', []))
+    
+    # Descargar el resto de páginas
+    max_paginas = paginas_a_descargar if paginas_a_descargar else total_paginas
+    for pagina in range(2, max_paginas + 1):
+        logger.info(f"Descargando página {pagina} de {max_paginas}...")
         
-        details = await api.obtener_detalle_subvencion(fund_slug)
-        if not details:
-            logger.error(f"No se obtuvieron detalles para {fund_slug}", 
-                        extra={'operation': 'api_request', 'entity': 'fund_details', 'status': 'error'})
-            return False
-
-        # Log de detalles para debugging
-        logger.debug(f"Detalles obtenidos para {fund_slug}: {json.dumps(details, indent=2, default=decimal_default)}", 
-                    extra={'operation': 'api_response', 'entity': 'fund_details', 'status': 'debug'})
-
-        # Generar new_data usando el mapeo
-        new_data = {}
-        for db_field, mapping in FUND_DETAILS_MAPPING.items():
-            if callable(mapping):
-                # Si es una función lambda
-                new_data[db_field] = mapping(details)
-            else:
-                # Si es un mapeo directo
-                new_data[db_field] = details.get(mapping)
-
-            # Convertir listas/diccionarios a JSON
-            if isinstance(new_data[db_field], (list, dict)):
-                new_data[db_field] = json.dumps(new_data[db_field])
-
-        # Verificar si existe
-        check_sql = "SELECT id FROM fund_details WHERE fund_slug = %s"
-        cursor.execute(check_sql, (fund_slug,))
-        exists = cursor.fetchone()
-        
-        if exists:
-            # Update
-            update_fields = [f"{field} = %s" for field in new_data.keys()]
-            update_sql = f"""
-            UPDATE fund_details SET
-                {', '.join(update_fields)},
-                updated_at = NOW()
-            WHERE fund_slug = %s
-            """
-            values = list(new_data.values()) + [fund_slug]
-            cursor.execute(update_sql, values)
+        respuesta = await api.obtener_lista_subvenciones(page=pagina, request_data=filtros_base)
+        if respuesta and 'results' in respuesta:
+            subvenciones_pagina = respuesta['results']
+            todas_subvenciones.extend(subvenciones_pagina)
             
-            logger.info(f"Detalles actualizados para {fund_slug}",
-                       extra={'operation': 'update', 'entity': 'fund_details', 'status': 'success'})
-            return True
+            if not respuesta.get('next'):
+                logger.info("No hay más páginas disponibles")
+                break
         else:
-            # Insert
-            columns = list(new_data.keys())
-            placeholders = ', '.join(['%s'] * len(columns))
-            insert_sql = f"""
-            INSERT INTO fund_details (
-                {', '.join(columns)}
-            ) VALUES ({placeholders})
-            """
-            values = list(new_data.values())
+            logger.warning(f"No se encontraron resultados en la página {pagina}")
+            break
             
-            cursor.execute(insert_sql, values)
-            
-            logger.info(f"Nuevos detalles creados para {fund_slug}",
-                       extra={'operation': 'insert', 'entity': 'fund_details', 'status': 'success'})
-            return True
+        # Pequeña pausa para no sobrecargar la API
+        await asyncio.sleep(0.5)
+    
+    logger.info(f"Total de subvenciones descargadas: {len(todas_subvenciones)}")
+    return todas_subvenciones
 
-    except Exception as e:
-        logger.error(f"Error actualizando fund_details para {fund_slug}: {str(e)}",
-                    extra={'operation': 'error', 'entity': 'fund_details', 'status': 'error'})
-        return False
+def guardar_json_backup(datos, nombre_archivo=None):
+    """
+    Guarda los datos en un archivo JSON como respaldo.
+    
+    :param datos: Datos a guardar
+    :param nombre_archivo: Nombre del archivo (si no se especifica, se usa la fecha actual)
+    """
+    if not nombre_archivo:
+        # Crear nombre de archivo con fecha y hora actual
+        fecha_actual = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nombre_archivo = f"subvenciones_{fecha_actual}.json"
+    
+    # Crear directorio de salida si no existe
+    os.makedirs('output', exist_ok=True)
+    ruta_completa = os.path.join('output', nombre_archivo)
+    
+    with open(ruta_completa, 'w', encoding='utf-8') as f:
+        json.dump(datos, f, ensure_ascii=False, indent=4)
+    
+    logger.info(f"Datos guardados como respaldo en {ruta_completa}")
 
-async def main():
+def identificar_cambios(subvenciones_api, existing_grants):
     """
-    Proceso ETL principal con validaciones
+    Identifica registros nuevos y actualizados comparando con los existentes en la BD.
+    
+    :param subvenciones_api: Lista de subvenciones obtenidas de la API
+    :param existing_grants: Diccionario de subvenciones existentes en la BD
+    :return: Tupla (nuevos, actualizados)
     """
-    try:
-        logger.info("Iniciando proceso ETL", 
-                   extra={'operation': 'start', 'entity': 'etl', 'status': 'init'})
+    nuevos = []
+    actualizados = []
+    sin_cambios = 0
+    
+    # Campos a comparar para detectar cambios
+    campos_comparacion = [
+        'formatted_title', 'status_text', 'entity', 'total_amount',
+        'request_amount', 'goal_extra', 'scope', 'publisher', 'applicants',
+        'term', 'help_type', 'expenses', 'fund_execution_period', 'line',
+        'extra_limit', 'info_extra'
+    ]
+    
+    for subvencion in subvenciones_api:
+        slug = subvencion['slug']
         
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
+        # Verificar si es un registro nuevo
+        if slug not in existing_grants:
+            nuevos.append(subvencion)
+            continue
+        
+        # Verificar si hay cambios en los campos relevantes
+        cambio_detectado = False
+        existing_grant = existing_grants[slug]
+        
+        for campo in campos_comparacion:
+            if campo in subvencion and str(subvencion.get(campo, '')) != str(existing_grant.get(campo, '')):
+                cambio_detectado = True
+                break
+        
+        if cambio_detectado:
+            actualizados.append(subvencion)
+        else:
+            sin_cambios += 1
+    
+    logger.info(f"Se identificaron {len(nuevos)} registros nuevos y {len(actualizados)} actualizados")
+    logger.info(f"Registros sin cambios: {sin_cambios}")
+    return nuevos, actualizados
+
+def insertar_nuevos_grants(cursor, grants_nuevos):
+    """
+    Inserta los nuevos grants en la base de datos
+    
+    :param cursor: Cursor de la conexión a la BD
+    :param grants_nuevos: Lista de grants nuevos a insertar
+    """
+    if not grants_nuevos:
+        logger.info("No hay registros nuevos para insertar")
+        return 0
+    
+    insert_query = """
+    INSERT INTO grants (
+        slug, formatted_title, status_text, entity, total_amount,
+        request_amount, goal_extra, scope, publisher, applicants,
+        term, help_type, expenses, fund_execution_period, line,
+        extra_limit, info_extra, created_at, updated_at
+    ) VALUES (
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+    )
+    """
+    
+    insertados = 0
+    for grant in grants_nuevos:
+        values = (
+            grant.get('slug', ''),
+            grant.get('formatted_title', ''),
+            grant.get('status_text', ''),
+            grant.get('entity', ''),
+            grant.get('total_amount', 0),
+            grant.get('request_amount', 0),
+            grant.get('goal_extra', ''),
+            grant.get('scope', ''),
+            grant.get('publisher', ''),
+            grant.get('applicants', ''),
+            grant.get('term', ''),
+            grant.get('help_type', ''),
+            grant.get('expenses', ''),
+            grant.get('fund_execution_period', ''),
+            grant.get('line', ''),
+            grant.get('extra_limit', ''),
+            grant.get('info_extra', '')
+        )
         
         try:
-            # Obtener y procesar datos
-            funds_data = await get_all_funds()
-            
-            if funds_data and 'results' in funds_data:
-                updates = {'funds': 0, 'fund_details': 0}
-                total_registros = len(funds_data['results'])
-                
-                logger.info(f"Procesando {total_registros} registros", 
-                          extra={'operation': 'process', 'entity': 'etl', 'status': 'processing'})
-                
-                for i, fund in enumerate(funds_data['results'], 1):
-                    logger.info(f"Procesando registro {i} de {total_registros}", 
-                              extra={'operation': 'process', 'entity': 'etl', 'status': 'processing'})
-                    
-                    # Actualizar funds
-                    if update_fund(cursor, fund):
-                        updates['funds'] += 1
-                        
-                    # Actualizar fund_details
-                    if await update_fund_details(cursor, fund['slug']):
-                        updates['fund_details'] += 1
-                
-                conn.commit()
-                
-                # Log del resumen de llamadas a la API
-                logger.info(
-                    f"Total llamadas API: {api_call_counter['total']} "
-                    f"(funds: {api_call_counter['funds']}, "
-                    f"fund_details: {api_call_counter['fund_details']})",
-                    extra={
-                        'operation': 'summary',
-                        'entity': 'api',
-                        'status': 'info'
-                    }
-                )
-                
-                logger.info(
-                    f"Proceso completado. Actualizaciones: Funds={updates['funds']}, Details={updates['fund_details']}",
-                    extra={
-                        'operation': 'complete',
-                        'entity': 'etl',
-                        'status': 'success'
-                    }
-                )
-            else:
-                logger.error(
-                    "No se obtuvieron datos de la API",
-                    extra={
-                        'operation': 'complete',
-                        'entity': 'etl',
-                        'status': 'error'
-                    }
-                )
-            
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            cursor.close()
-            conn.close()
-            
-    except Exception as e:
-        logger.error(
-            f"Error en proceso ETL: {str(e)}",
-            extra={
-                'operation': 'error',
-                'entity': 'etl',
-                'status': 'failed'
-            }
+            cursor.execute(insert_query, values)
+            insertados += 1
+            logger.info(f"Insertado nuevo registro con slug: {grant['slug']}")
+        except mysql.connector.Error as err:
+            logger.error(f"Error insertando registro {grant['slug']}: {err}")
+    
+    return insertados
+
+def actualizar_grants_modificados(cursor, grants_actualizados):
+    """
+    Actualiza los grants modificados en la base de datos
+    
+    :param cursor: Cursor de la conexión a la BD
+    :param grants_actualizados: Lista de grants actualizados
+    """
+    if not grants_actualizados:
+        logger.info("No hay registros para actualizar")
+        return 0
+    
+    update_query = """
+    UPDATE grants SET
+        formatted_title = %s,
+        status_text = %s,
+        entity = %s,
+        total_amount = %s,
+        request_amount = %s,
+        goal_extra = %s,
+        scope = %s,
+        publisher = %s,
+        applicants = %s,
+        term = %s,
+        help_type = %s,
+        expenses = %s,
+        fund_execution_period = %s,
+        line = %s,
+        extra_limit = %s,
+        info_extra = %s
+    WHERE slug = %s
+    """
+    
+    actualizados = 0
+    for grant in grants_actualizados:
+        values = (
+            grant.get('formatted_title', ''),
+            grant.get('status_text', ''),
+            grant.get('entity', ''),
+            grant.get('total_amount', 0),
+            grant.get('request_amount', 0),
+            grant.get('goal_extra', ''),
+            grant.get('scope', ''),
+            grant.get('publisher', ''),
+            grant.get('applicants', ''),
+            grant.get('term', ''),
+            grant.get('help_type', ''),
+            grant.get('expenses', ''),
+            grant.get('fund_execution_period', ''),
+            grant.get('line', ''),
+            grant.get('extra_limit', ''),
+            grant.get('info_extra', ''),
+            grant.get('slug', '')  # WHERE condition
         )
-        raise
+        
+        try:
+            cursor.execute(update_query, values)
+            actualizados += 1
+            logger.info(f"Actualizado registro con slug: {grant['slug']}")
+        except mysql.connector.Error as err:
+            logger.error(f"Error actualizando registro {grant['slug']}: {err}")
+    
+    return actualizados
+
+# Función eliminada - Ya no registramos en tabla aparte
+
+async def main():
+    start_time = datetime.now()
+    logger.info(f"Iniciando proceso ETL Fandit a las {start_time}")
+    
+    # Obtener tokens y credenciales del archivo .env
+    token = os.getenv('FANDIT_TOKEN')
+    expert_token = os.getenv('FANDIT_EXPERT_TOKEN')
+    email = os.getenv('FANDIT_EMAIL')
+    password = os.getenv('FANDIT_PASSWORD')
+    
+    # Verificar que los tokens estén presentes
+    if not token or not expert_token:
+        logger.error("Error: Tokens no encontrados en el archivo .env")
+        return
+    
+    # Inicializar la API con los tokens
+    api = FanditAPI(
+        token=token, 
+        expert_token=expert_token, 
+        email=email,  
+        password=password  
+    )
+    
+    try:
+        # Conectar a la base de datos
+        conn = connect_db()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Obtener grants existentes
+        existing_grants = get_existing_grants(cursor)
+        
+        # Intentar renovar el token primero
+        if email and password:
+            await api.refrescar_token()
+        
+        # 1. Descargar lista de subvenciones (todas las páginas)
+        subvenciones = await descargar_subvenciones(api, paginas_a_descargar=None)
+        logger.info(f"Total de subvenciones base descargadas: {len(subvenciones)}")
+        
+        # Verificar si se descargaron subvenciones
+        if not subvenciones:
+            logger.error("No se descargaron subvenciones. Verificar credenciales y configuración.")
+            return
+        
+        # 2. Guardar una copia de los datos como respaldo
+        guardar_json_backup(subvenciones)
+        
+        # 3. Identificar registros nuevos y actualizados
+        nuevos, actualizados = identificar_cambios(subvenciones, existing_grants)
+        
+        # Si no hay cambios, finalizar
+        if not nuevos and not actualizados:
+            logger.info("No se detectaron cambios en los datos, no es necesario actualizar la base de datos")
+            end_time = datetime.now()
+            duration = end_time - start_time
+            logger.info(f"Proceso ETL completado sin cambios. Duración: {duration}")
+            return
+            
+        # 4. Insertar nuevos registros
+        nuevos_insertados = insertar_nuevos_grants(cursor, nuevos)
+        
+        # 5. Actualizar registros modificados
+        registros_actualizados = actualizar_grants_modificados(cursor, actualizados)
+        
+        # Commit de los cambios
+        conn.commit()
+        logger.info("Cambios confirmados en la base de datos")
+        
+        end_time = datetime.now()
+        duration = end_time - start_time
+        logger.info(f"Proceso ETL completado. Duración: {duration}")
+        logger.info(f"Total registros procesados: {len(subvenciones)}")
+        logger.info(f"Registros nuevos insertados: {nuevos_insertados}")
+        logger.info(f"Registros actualizados: {registros_actualizados}")
+        
+    except Exception as e:
+        logger.error(f"Error en el proceso ETL: {e}")
+        # Imprimir información adicional de depuración
+        import traceback
+        logger.error(traceback.format_exc())
+        if 'conn' in locals() and conn.is_connected():
+            conn.rollback()
+            logger.info("Se ha realizado rollback de las transacciones")
+    finally:
+        # Cerrar cursor y conexión
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn.is_connected():
+            conn.close()
+            logger.info("Conexión a la base de datos cerrada")
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,49 +1,26 @@
-version: '3.8'
-
+version: '3'
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+  backend-api:
+    container_name: backend-api
+    image: backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    networks:
+      - app-network
+
+  frontend-web:
+    container_name: frontend-web
+    image: frontend
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - backend-api
     networks:
-      - fandit-network
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      DB_HOST: db
-      DB_NAME: ${DB_NAME:-fandit_db}
-      DB_USER: ${DB_USER:-root}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
-      DB_PORT: 3306
-    depends_on:
-      - db
-    networks:
-      - fandit-network
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: ${DB_NAME:-fandit_db}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
-      MYSQL_USER: ${DB_USER:-fandit_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    networks:
-      - fandit-network
+      - app-network
 
 networks:
-  fandit-network:
+  app-network:
+    name: app-network
     driver: bridge
-
-volumes:
-  mysql_data:

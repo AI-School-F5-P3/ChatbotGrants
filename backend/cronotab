@@ -1,0 +1,3 @@
+# Ejecutar ETL todos los días a las 12:00 (Hora de Madrid)
+0 12 * * * cd /app && python etl_fandit.py >> /app/logs/etl_$(date +\%Y\%m\%d).log 2>&1
+# Una línea en blanco es necesaria al final del archivo crontab
