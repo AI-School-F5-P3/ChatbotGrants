@@ -9,6 +9,8 @@ import asyncio
 from threading import Lock
 import queue
 from datetime import datetime, timedelta
+from typing import List, Dict
+from dynamodb import insert_chat_messages
 
 app = FastAPI(root_path="/api")
 
@@ -184,6 +186,15 @@ class SessionManager:
             for user_id in inactive_users:
                 self.end_session(user_id)
 
+class ChatMessage(BaseModel):
+    userId: str
+    timestamp: str
+    role: str
+    message_content: str
+    
+class ChatHistoryRequest(BaseModel):
+    messages: List[ChatMessage]
+    
 # Initialize session manager
 session_manager = SessionManager()
 
@@ -212,7 +223,6 @@ async def start_session(user_data: UserMessage) -> SessionResponse:
     except Exception as e:
         print(f"Error in start_session: {str(e)}")
         raise HTTPException(status_code=500, detail="Could not start session")
-
 
 @app.post("/chat")                                # IMPROVED
 async def chat(user_data: UserMessage) -> Dict:
@@ -318,3 +328,18 @@ async def start_cleanup_task():
     
     # Start the cleanup loop without waiting for it
     asyncio.create_task(cleanup_loop())
+    
+@app.post("/save_chat")
+async def save_chat(chat_data: ChatHistoryRequest):
+    """
+    Guarda el historial de chat cuando se inicia una nueva conversación o se cierra sesión.
+    """
+    if not chat_data.messages:
+        raise HTTPException(status_code=400, detail="Faltan datos en la petición")
+
+    try:
+        # Guardar todos los mensajes en DynamoDB
+        await insert_chat_messages(chat_data.messages)
+        return {"message": "Histórico guardado exitosamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error guardando el chat: {str(e)}")
