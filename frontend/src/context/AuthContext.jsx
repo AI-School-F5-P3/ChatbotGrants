@@ -1,13 +1,26 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        return localStorage.getItem("isAuthenticated") === "true"; // ✅ Recupera autenticación de localStorage
+    });
+    const [userId, setUserId] = useState(() => {
+        return localStorage.getItem("userId") || null; // ✅ Recupera userId de localStorage
+    });
+
+    // ✅ Guardar en `localStorage` cada vez que `userId` o `isAuthenticated` cambian
+    useEffect(() => {
+        localStorage.setItem("isAuthenticated", isAuthenticated);
+        if (userId) {
+            localStorage.setItem("userId", userId);
+        }
+    }, [isAuthenticated, userId]);
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, userId, setUserId }}>
             {children}
         </AuthContext.Provider>
     );
@@ -16,11 +29,14 @@ export const AuthProvider = ({ children }) => {
 // Hook para manejar autenticación con `useNavigate()`
 export const useAuthActions = () => {
     const navigate = useNavigate();
-    const { setIsAuthenticated } = useContext(AuthContext);
+    const { setIsAuthenticated, setUserId } = useContext(AuthContext);
 
     const login = (email, password) => {
         if (email === "admin@ayming.com" && password === "admin") {
             setIsAuthenticated(true);
+            const newUserId = `user_${email}`;
+            setUserId(newUserId);
+            localStorage.setItem("userId", newUserId); // ✅ Guarda `userId` en localStorage
             navigate("/chatbot");
             return true;
         } else {
@@ -30,6 +46,9 @@ export const useAuthActions = () => {
 
     const logout = () => {
         setIsAuthenticated(false);
+        setUserId(null);
+        localStorage.removeItem("userId"); // ✅ Borra `userId` al cerrar sesión
+        localStorage.removeItem("isAuthenticated"); // ✅ Borra estado de autenticación
         navigate("/");
     };
 
