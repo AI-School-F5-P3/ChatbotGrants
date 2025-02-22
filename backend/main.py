@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Optional, List
@@ -10,7 +10,8 @@ from threading import Lock
 import queue
 from datetime import datetime, timedelta
 from typing import List, Dict
-from dynamodb import insert_chat_messages
+from dynamodb import insert_chat_messages, get_chat_history, get_conversations, table
+from boto3.dynamodb.conditions import Key # Importamos `Key` para las consultas
 
 app = FastAPI(root_path="/api")
 
@@ -357,3 +358,38 @@ async def insert_messages(chat_data: ChatHistoryRequest):
         return {"message": "Mensajes insertados exitosamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error guardando los mensajes: {str(e)}")
+
+@app.get("/get_chat_messages")
+async def get_chat_messages(user_id: str = Query(...), conversation_id: str = Query(...)):
+    """
+    Obtiene los mensajes de una conversación específica de un usuario.
+    """
+    try:
+        messages = get_chat_history(user_id)
+        # Filtrar mensajes por `conversation_id`
+        filtered_messages = [msg for msg in messages if msg["conversationId"] == conversation_id]
+
+        if not filtered_messages:
+            raise HTTPException(status_code=404, detail="No se encontraron mensajes para esta conversación")
+
+        # Ordenamos los mensajes por 'order'
+        sorted_messages = sorted(filtered_messages, key=lambda x: x["order"])
+
+        return {"messages": sorted_messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo mensajes: {str(e)}")
+
+@app.get("/get_user_conversations/{user_id}")
+async def get_user_conversations(user_id: str):
+    """
+    Obtiene la lista de conversaciones guardadas para un usuario en DynamoDB.
+    """
+    try:
+        messages = get_conversations(user_id)
+
+        # Ordenamos los mensajes por 'order'
+        sorted_messages = sorted(messages, key=lambda x: x["conversation_date"], reverse=True)
+
+        return {"messages": sorted_messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo mensajes: {str(e)}")

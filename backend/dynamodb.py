@@ -4,6 +4,7 @@ import uuid
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 from typing import List, Dict
+from boto3.dynamodb.conditions import Key
 
 # Cargar variables de entorno
 load_dotenv()
@@ -40,7 +41,7 @@ def insert_chat_messages(user_id: str, conversation_id: str, messages: List[Dict
                     "userId": user_id,  # Clave de partición
                     "conversationId": conversation_id,  # Clave de ordenación
                     "messageId": message_id,  # ID único garantizado
-                    "timestamp": msg.get("timestamp", datetime.now(timezone.utc).isoformat()),  # Marca de tiempo ISO 8601
+                    "conversation_date": msg.get("timestamp", datetime.now(timezone.utc).isoformat()),  # Marca de tiempo ISO 8601
                     "role": msg.get("sender", "unknown"),  # "user" o "bot"
                     "message_content": msg.get("text", ""),  # Contenido del mensaje
                     "order": idx  # Para mantener orden de los mensajes
@@ -68,38 +69,34 @@ def get_chat_history(user_id: str) -> List[Dict]:
     except Exception as e:
         print(f"❌ Error obteniendo historial de chat: {str(e)}")
         return []
+    
 
-if __name__ == "__main__":
-    print("🔍 Probando conexión con DynamoDB...")
+def get_conversations(user_id: str) -> List[Dict]:
+    """
+    Obtiene los IDs únicos de las conversaciones de un usuario en DynamoDB.
+    """
+    try:
+        response = table.query(
+            KeyConditionExpression=Key("userId").eq(user_id),
+            ProjectionExpression="conversationId, conversation_date"
+        )
 
-    # Insertar mensajes de prueba
-    test_messages = [
-        {
-            "sender": "bot",
-            "text": "¡Hola! Soy un asistente virtual para ayudarte a encontrar subvenciones. Voy a hacerte algunas preguntas. Por favor, ¿podrías decirme en qué Comunidad Autónoma está el cliente ?"
-        },
-        {
-            "sender": "user",
-            "text": "kñkñl"
-        },
-        {
-            "sender": "bot",
-            "text": "¿Cuál es el tipo de empresa? (Autónomo, PYME, Gran Empresa)",
-        },
-        {
-            "sender": "user",
-            "text": "ñlñ"
-        },
-        {
-            "sender": "bot",
-            "text": ""
-        }
-    ]
+        # Extraer IDs únicos de las conversaciones
+        unique_conversations = {}
+        
+        for conv in response.get("Items", []):
+            conv_id = conv["conversationId"]
+            if conv_id not in unique_conversations:
+                unique_conversations[conv_id] = datetime.strptime(conv["conversation_date"][:16], "%Y-%m-%dT%H:%M").strftime("%d/%m/%Y %H:%M")
 
-    insert_chat_messages("user123", "conv-236", test_messages)
+        # Convertimos a lista de diccionarios
+        conversations = [
+            {"conversationId": conv_id, "conversation_date": conv_date}
+            for conv_id, conv_date in unique_conversations.items()
+        ]
 
-    # Recuperar los mensajes insertados
-    history = get_chat_history("user123")
-    print("\n🔍 Historial de la conversación obtenida desde DynamoDB:")
-    for msg in history:
-        print(msg)
+        return conversations
+
+    except Exception as e:
+        print(f"❌ Error obteniendo historial de conversaciones: {str(e)}")
+        return []

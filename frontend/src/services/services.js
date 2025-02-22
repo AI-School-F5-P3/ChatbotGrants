@@ -60,6 +60,36 @@ export const saveChat = async (userId, messages) => {
     }
 };
 
+export const getChatHistory = async (userId, conversationId) => {
+    try {
+        const response = await axios.get(`${API_URL}/get_chat_messages`, {
+            params: { user_id: userId, conversation_id: conversationId },
+        });
+        return response.data.messages;
+    } catch (error) {
+        console.error("❌ Error obteniendo el historial de chat:", error);
+        return [];
+    }
+};
+
+export const getUserConversations = async (userId) => {
+    try {
+        console.log(`🔹 Obteniendo conversaciones del usuario: ${API_URL}/get_user_conversations/${userId}`);
+        const response = await axios.get(`${API_URL}/get_user_conversations/${userId}`);
+
+        // ✅ Cambiamos a "messages" porque es la clave correcta en la API
+        const conversations = response.data.messages || [];
+        
+        console.log("✅ Conversaciones obtenidas:", conversations);
+        return conversations;
+    } catch (error) {
+        console.error("❌ Error obteniendo la lista de conversaciones:", error);
+        return [];  // ✅ Devuelve un array vacío en caso de error
+    }
+};
+
+
+
 // Limpiar la conversación sin desloguear al usuario
 export const clearChat = async (userId, messages, setMessages) => {
     try {
