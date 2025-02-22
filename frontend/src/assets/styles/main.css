@@ -79,7 +79,7 @@
 }
 
 html {
-  font-size: clamp(12px, 0.9vw, 18px); /* Adaptable para todo el sitio */
+  font-size: clamp(12px, 1vw, 18px); /* Adaptable para todo el sitio */
 }
 
 h1 {
@@ -413,7 +413,7 @@ figure.logo-default svg {
   position: relative;
   border-radius: 1rem;
   padding: 1.2rem 1.2rem;
-  font-size: 1em;
+  font-size: 1rem;
   line-height: 1.4;
 }
 .c-bubble article {

@@ -1,7 +1,7 @@
 @use "../base/variables" as *;
 
 html {
-    font-size: clamp(12px, 0.9vw, 18px); /* Adaptable para todo el sitio */
+    font-size: clamp(12px, 1vw, 18px); /* Adaptable para todo el sitio */
 }
 
 h1 {

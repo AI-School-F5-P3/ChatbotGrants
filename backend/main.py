@@ -330,16 +330,30 @@ async def start_cleanup_task():
     asyncio.create_task(cleanup_loop())
     
 @app.post("/save_chat")
-async def save_chat(chat_data: ChatHistoryRequest):
+async def insert_messages(chat_data: ChatHistoryRequest):
     """
-    Guarda el historial de chat cuando se inicia una nueva conversación o se cierra sesión.
+    Endpoint para insertar mensajes en DynamoDB.
     """
     if not chat_data.messages:
         raise HTTPException(status_code=400, detail="Faltan datos en la petición")
 
     try:
-        # Guardar todos los mensajes en DynamoDB
-        await insert_chat_messages(chat_data.messages)
-        return {"message": "Histórico guardado exitosamente"}
+        user_id = chat_data.messages[0].userId  # Tomamos el userId del primer mensaje
+        conversation_id = str(uuid.uuid4())  # Generamos un ID único para la conversación
+
+        # Convertimos los datos al formato esperado por `insert_chat_messages`
+        messages = [
+            {
+                "sender": msg.role,
+                "text": msg.message_content,
+                "timestamp": msg.timestamp
+            }
+            for msg in chat_data.messages
+        ]
+
+        # Insertamos los mensajes en DynamoDB
+        insert_chat_messages(user_id, conversation_id, messages)
+
+        return {"message": "Mensajes insertados exitosamente"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error guardando el chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error guardando los mensajes: {str(e)}")
