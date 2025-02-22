@@ -266,9 +266,9 @@ const Chat = ({userId, messages, setMessages}) => {
         }, 100);
     };
 
-    const handleEndSession = () => {
-        endSession(userId, messages, setMessages, setIsSessionActive);
-    };
+    // const handleEndSession = () => {
+    //     endSession(userId, messages, setMessages, setIsSessionActive);
+    // };
 
     return (
         <div className="chat-area flex items-center justify-center">

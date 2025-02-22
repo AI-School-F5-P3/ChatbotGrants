@@ -41,66 +41,53 @@ export async function chat(userId, inputMessage) {
     }
 }
 
-export const saveChatHistory = async (userId, messages) => {
+export const saveChat = async (userId, messages) => {
     try {
-        // Convertir mensajes en un formato adecuado para DynamoDB
+        if (messages.length === 0) return; // No enviar si no hay mensajes
+
+        // Formatear mensajes para coincidir con el endpoint `/save_chat`
         const formattedMessages = messages.map(msg => ({
-            userId: userId,  // Clave de partición
-            timestamp: new Date().toISOString(),  // Clave de ordenación
+            userId: userId,  // Clave de partición en DynamoDB
+            timestamp: new Date().toISOString(),  // Marca de tiempo ISO
             role: msg.sender,  // "user" o "bot"
             message_content: msg.text  // Contenido del mensaje
         }));
 
         await axios.post(`${API_URL}/save_chat`, { messages: formattedMessages });
-        console.log("Histórico guardado en la base de datos");
+        console.log("✅ Conversación guardada en la base de datos");
     } catch (error) {
-        console.error("Error guardando historial:", error);
+        console.error("❌ Error guardando conversación:", error);
     }
 };
 
 // Limpiar la conversación sin desloguear al usuario
 export const clearChat = async (userId, messages, setMessages) => {
     try {
-        // Guardar historial antes de limpiar
-        // await saveChatHistory(userId, messages);
+        await saveChat(userId, messages); // Guarda la conversación antes de limpiarla
+        setMessages([]); // Limpia los mensajes del estado
+        console.log("🗑 Conversación limpiada");
 
-        // Limpiar los mensajes del estado
-        setMessages([]);
-        console.log("Conversación limpiada");
-
-        // Esperar un pequeño tiempo para asegurar que React actualiza el estado
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Pequeña espera para actualizar React
     } catch (error) {
-        console.error("Error limpiando conversación:", error);
+        console.error("❌ Error limpiando conversación:", error);
     }
 };
 
 // Cerrar sesión en el backend y limpiar el estado en el frontend
-export const logoutAndEndSession = async (
-    userId,
-    messages,
-    setIsAuthenticated,
-    setUserId,
-    navigate
-) => {
+export const logoutAndEndSession = async (userId, messages, setIsAuthenticated, setUserId, navigate) => {
     try {
-        // Guardar historial antes de cerrar sesión
-        // await saveChatHistory(userId, messages);
+        await saveChat(userId, messages); // Guarda el historial antes de cerrar sesión
 
-        // Finalizar sesión en el backend
-        await axios.delete(`${API_URL}/end_session/${userId}`);
+        await axios.delete(`${API_URL}/end_session/${userId}`); // Finaliza sesión en backend
 
-        // Limpiar estado de autenticación en frontend
         setIsAuthenticated(false);
         setUserId(null);
-        localStorage.removeItem("userId"); // ✅ Borra `userId` de localStorage
-        localStorage.removeItem("isAuthenticated"); // ✅ Borra autenticación
+        localStorage.removeItem("userId");
+        localStorage.removeItem("isAuthenticated");
 
-        console.log("Sesión finalizada y usuario deslogueado");
-
-        // Redirigir al login
-        navigate("/");
+        console.log("👋 Sesión finalizada y usuario deslogueado");
+        navigate("/"); // Redirige al login
     } catch (error) {
-        console.error("Error cerrando sesión:", error);
+        console.error("❌ Error cerrando sesión:", error);
     }
 };

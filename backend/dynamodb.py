@@ -24,8 +24,9 @@ def insert_chat_messages(user_id: str, conversation_id: str, messages: List[Dict
     """
     Guarda múltiples mensajes en DynamoDB dividiéndolos en ítems individuales, evitando duplicados en la clave primaria.
     """
+    print("guardando")
     try:
-        existing_message_ids = set()  # 🔹 Evita IDs duplicados
+        existing_message_ids = set()  # Evita IDs duplicados
 
         with table.batch_writer() as batch:
             for idx, msg in enumerate(messages):
