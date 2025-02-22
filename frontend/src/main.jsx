@@ -5,7 +5,7 @@ import { router } from "./router/Router";
 import { ThemeProvider } from "@material-tailwind/react";
 import { AuthProvider } from "./context/AuthContext"; // ✅ Importa AuthProvider
 
-import "./index.css";
+
 import "./assets/styles/main.scss"; 
 
 createRoot(document.getElementById("root")).render(

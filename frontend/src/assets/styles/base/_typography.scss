@@ -1,5 +1,9 @@
 @use "../base/variables" as *;
 
+html {
+    font-size: clamp(12px, 0.9vw, 18px); /* Adaptable para todo el sitio */
+}
+
 h1 {
     font-size: 1.8rem;
     line-height: 2rem;
@@ -76,8 +80,8 @@ ul {
             position: relative;
             padding-left: 1rem;
             &::marker {
-                content: "●"; 
-                color: var(--primary-color)
+                content: "●";
+                color: var(--primary-color);
             }
             &::before {
                 content: none;
@@ -94,8 +98,8 @@ a {
     color: var(--primary-color);
 }
 
-details{
-    padding: .8rem 1.4rem !important;
+details {
+    padding: 0.8rem 1.4rem !important;
     border: 1px solid var(--custom10Gray) !important;
 }
 
