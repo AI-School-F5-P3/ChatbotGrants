@@ -1,19 +1,23 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Importa el contexto
-import { startSession, clearChat,getUserConversations, } from "../services/services";
+import {
+    startSession,
+    clearChat,
+    getUserConversations,
+} from "../services/services";
 import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import Chat from "../components/Chat";
 
 function Chatbot() {
-    const { isAuthenticated, userId } = useAuth(); // Verifica si el usuario está autenticado
+    const { isAuthenticated, user } = useAuth(); // Verifica si el usuario está autenticado
+    const userId = user?.userId; // ✅ Extrae correctamente el userId
     const [messages, setMessages] = useState([]); // Maneja los mensajes del chat
     const [isInputDisabled, setIsInputDisabled] = useState(false); //  Maneja el estado de input deshabilitado
     const [isSavedConversation, setIsSavedConversation] = useState(false); //  Maneja el estado de conversación guardada
     const [conversations, setConversations] = useState([]); //  Maneja las conversaciones del usuario
     const [inputMessage, setInputMessage] = useState("");
-        
 
     const initNewConversation = async () => {
         try {
@@ -25,8 +29,6 @@ function Chatbot() {
             console.error("Error iniciando nueva sesión:", err);
         }
     };
-
-
 
     // Función para iniciar una nueva conversación
     const handleNewConversation = async (save, isSavedConversation) => {

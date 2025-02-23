@@ -5,70 +5,68 @@ import users from "../mocks/users.json"; // ✅ Importa la lista de usuarios des
 // 📌 Crear el contexto de autenticación
 const AuthContext = createContext();
 
-// 📌 Proveedor de autenticación que gestiona el estado global de `isAuthenticated` y `userId`
 export const AuthProvider = ({ children }) => {
-    // ✅ Estado de autenticación: se inicializa desde `localStorage`
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
         return localStorage.getItem("isAuthenticated") === "true";
     });
 
-    // ✅ Estado del usuario autenticado (ID del usuario)
-    const [userId, setUserId] = useState(() => {
-        return localStorage.getItem("userId") || null;
+    // ✅ Estado del usuario autenticado (se guarda el objeto completo)
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem("user");
+        return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    // ✅ Guardar `isAuthenticated` y `userId` en `localStorage` cada vez que cambien
+    // ✅ Guardar en `localStorage` cada vez que `user` o `isAuthenticated` cambian
     useEffect(() => {
         localStorage.setItem("isAuthenticated", isAuthenticated);
-        if (userId) {
-            localStorage.setItem("userId", userId);
+        if (user) {
+            localStorage.setItem("user", JSON.stringify(user));
+        } else {
+            localStorage.removeItem("user");
         }
-    }, [isAuthenticated, userId]);
+    }, [isAuthenticated, user]);
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, userId, setUserId }}>
+        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, user, setUser }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// 📌 Hook personalizado para manejar las acciones de autenticación (login y logout)
+// 📌 Hook para manejar login y logout
 export const useAuthActions = () => {
     const navigate = useNavigate();
-    const { setIsAuthenticated, setUserId } = useContext(AuthContext);
+    const { setIsAuthenticated, setUser } = useContext(AuthContext);
 
-    // ✅ Función de inicio de sesión (verifica email y contraseña en `users.json`)
     const login = (email, password) => {
         // 🔎 Buscar en `users.json` si el usuario y contraseña coinciden
-        const user = users.find(u => u.email === email && u.password === password);
+        const userFound = users.find(u => u.email === email && u.password === password);
 
-        if (user) {
-            // 🟢 Si es válido, actualiza el estado y guarda en `localStorage`
+        if (userFound) {
             setIsAuthenticated(true);
-            setUserId(user.userId);
-            console.log("🔑 Usuario autenticado:", user)
-            localStorage.setItem("userId", user.userId);
-            navigate("/chatbot"); // 🔀 Redirige al usuario a la página del chatbot
+            setUser(userFound); // 🟢 Guarda el usuario completo en el estado
+            localStorage.setItem("user", JSON.stringify(userFound));
+            console.log("🔑 Usuario autenticado:", userFound);
+            navigate("/chatbot");
             return true;
         } else {
-            // 🔴 Si las credenciales son incorrectas, retorna `false`
+            console.log("❌ Usuario no encontrado o credenciales incorrectas");
             return false;
         }
     };
 
-    // ✅ Función de cierre de sesión (borra el estado y redirige al inicio)
     const logout = () => {
         setIsAuthenticated(false);
-        setUserId(null);
-        localStorage.removeItem("userId"); // 🗑️ Borra el ID del usuario
-        localStorage.removeItem("isAuthenticated"); // 🗑️ Borra el estado de autenticación
-        navigate("/"); // 🔀 Redirige al usuario a la página de inicio
+        setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("isAuthenticated");
+        navigate("/");
     };
 
     return { login, logout };
 };
 
-// 📌 Hook para obtener el estado de autenticación en cualquier parte de la app
+// 📌 Hook para acceder a la autenticación desde cualquier parte de la app
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
