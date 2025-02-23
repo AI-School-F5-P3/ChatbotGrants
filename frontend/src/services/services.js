@@ -89,15 +89,12 @@ export const getUserConversations = async (userId) => {
 };
 
 
-
 // Limpiar la conversación sin desloguear al usuario
 export const clearChat = async (userId, messages, setMessages) => {
     try {
         await saveChat(userId, messages); // Guarda la conversación antes de limpiarla
         setMessages([]); // Limpia los mensajes del estado
         console.log("🗑 Conversación limpiada");
-
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Pequeña espera para actualizar React
     } catch (error) {
         console.error("❌ Error limpiando conversación:", error);
     }

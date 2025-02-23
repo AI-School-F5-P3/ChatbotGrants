@@ -9,32 +9,62 @@ import {
     ListItem,
     ListItemPrefix,
     Alert,
+    Dialog,
+    DialogHeader,
+    DialogBody,
+    DialogFooter,
 } from "@material-tailwind/react";
 import { DocumentTextIcon } from "@heroicons/react/24/solid";
 
-export function Sidebar({ onNewConversation, userId, setMessages }) {
-    const [conversations, setConversations] = useState([]);
+export function Sidebar({
+    onNewConversation,
+    userId,
+    setMessages,
+    isInputDisabled,
+    setIsInputDisabled,
+    conversations,
+    setConversations,
+    isSavedConversation,
+    setIsSavedConversation,
+    setInputMessage,
+}) {
     const [openAlert, setOpenAlert] = useState(true);
+    const [openDialog, setOpenDialog] = useState(false);
     const { logout } = useAuthActions();
 
-    // Obtener la lista de conversaciones al cargar el componente
     useEffect(() => {
         if (userId) {
             getUserConversations(userId).then(setConversations);
         }
     }, [userId]);
 
-    // Función para cargar una conversación guardada
     const handleLoadConversation = async (conversationId) => {
         const rawMessages = await getChatHistory(userId, conversationId);
-
-        // Transformamos los mensajes para que coincidan con la estructura esperada en Chat.jsx
         const formattedMessages = rawMessages.map((msg) => ({
-            sender: msg.role, // "user" o "bot"
-            text: msg.message_content, // Mensaje en el formato esperado
+            sender: msg.role,
+            text: msg.message_content,
         }));
-
         setMessages(formattedMessages);
+        setIsInputDisabled(true);
+        setInputMessage("");
+        setIsSavedConversation(true);
+    };
+
+    const handleNewConversation = () => {
+        if (isSavedConversation) {
+            onNewConversation(false);
+        } else {
+            setOpenDialog(true);
+        }
+    };
+
+    const handleDialogClose = () => {
+        setOpenDialog(false);
+    };
+
+    const handleConfirmNewConversation = async (save) => {
+        setOpenDialog(false); // Cierra el diálogo siempre
+        onNewConversation(save); // Se mantiene la llamada a onNewConversation, que manejará el guardado si es necesario
     };
 
     return (
@@ -42,7 +72,7 @@ export function Sidebar({ onNewConversation, userId, setMessages }) {
             <div className="flex flex-row flex-wrap items-center justify-center p-2 pt-5">
                 <Button
                     variant="outlined"
-                    onClick={onNewConversation}
+                    onClick={handleNewConversation}
                     className="hover:text-white hover:bg-customBlue mb-4 border border-customBlue text-customBlue"
                 >
                     Nueva conversación
@@ -58,7 +88,6 @@ export function Sidebar({ onNewConversation, userId, setMessages }) {
                 </Typography>
                 <hr className="my-2 border-blue-gray-50" />
                 <div className="overflow-y-auto h-[calc(100vh-19rem)]">
-                    {/* Muestra cada conversación con su fecha */}
                     {conversations && conversations.length > 0 ? (
                         conversations.map((conv) => (
                             <ListItem
@@ -69,10 +98,9 @@ export function Sidebar({ onNewConversation, userId, setMessages }) {
                                 className="cursor-pointer hover:bg-gray-200"
                             >
                                 <ListItemPrefix>
-                                    <DocumentTextIcon className="h-5 w-5" />
+                                    <DocumentTextIcon className="h-4 w-4" />
                                 </ListItemPrefix>
                                 {conv.conversation_date}
-                                {/* Se muestra la fecha del último mensaje */}
                             </ListItem>
                         ))
                     ) : (
@@ -96,6 +124,30 @@ export function Sidebar({ onNewConversation, userId, setMessages }) {
                     eliminarán automáticamente.
                 </Typography>
             </Alert>
+
+            <Dialog open={openDialog} handler={handleDialogClose}>
+                <DialogHeader>Guardar conversación</DialogHeader>
+                <DialogBody>
+                    ¿Deseas guardar la conversación actual antes de iniciar una
+                    nueva?
+                </DialogBody>
+                <DialogFooter>
+                    <Button
+                        variant="text"
+                        color="gray"
+                        onClick={() => handleConfirmNewConversation(false)}
+                    >
+                        No
+                    </Button>
+                    <Button
+                        variant="gradient"
+                        color="blue"
+                        onClick={() => handleConfirmNewConversation(true)}
+                    >
+                        Sí, guardar
+                    </Button>
+                </DialogFooter>
+            </Dialog>
         </Card>
     );
 }

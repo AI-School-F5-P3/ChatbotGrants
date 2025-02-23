@@ -9,7 +9,7 @@ from boto3.dynamodb.conditions import Key
 # Cargar variables de entorno
 load_dotenv()
 
-# Configurar conexión con DynamoDB usando `resource`
+# Conexión con DynamoDB
 dynamodb = boto3.resource(
     "dynamodb",
     region_name=os.getenv("AWS_DYNAMO_REGION"),

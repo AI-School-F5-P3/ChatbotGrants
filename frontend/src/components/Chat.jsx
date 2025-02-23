@@ -13,10 +13,8 @@ import ayming from "/img/logo_icono.svg";
 import { chat, startSession } from "../services/services";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-const Chat = ({userId, messages, setMessages}) => {
-    const [inputMessage, setInputMessage] = useState("");
+const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisabled, inputMessage, setInputMessage}) => {
     const [isTyping, setIsTyping] = useState(false);
-    const [isInputDisabled, setIsInputDisabled] = useState(false);
     const [isSessionActive, setIsSessionActive] = useState(true);
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
