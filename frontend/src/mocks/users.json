@@ -1,0 +1,18 @@
+[
+    {
+      "email": "admin@ayming.com",
+      "password": "admin",
+      "userId": "user_admin"
+    },
+    {
+      "email": "comercial1@ayming.com",
+      "password": "password1",
+      "userId": "user_comercial_1"
+    },
+    {
+      "email": "comercial2@ayming.com",
+      "password": "password2",
+      "userId": "user_comercial_2"
+    }
+  ]
+  

@@ -1,17 +1,23 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import users from "../mocks/users.json"; // ✅ Importa la lista de usuarios desde el JSON
 
+// 📌 Crear el contexto de autenticación
 const AuthContext = createContext();
 
+// 📌 Proveedor de autenticación que gestiona el estado global de `isAuthenticated` y `userId`
 export const AuthProvider = ({ children }) => {
+    // ✅ Estado de autenticación: se inicializa desde `localStorage`
     const [isAuthenticated, setIsAuthenticated] = useState(() => {
-        return localStorage.getItem("isAuthenticated") === "true"; // ✅ Recupera autenticación de localStorage
-    });
-    const [userId, setUserId] = useState(() => {
-        return localStorage.getItem("userId") || null; // ✅ Recupera userId de localStorage
+        return localStorage.getItem("isAuthenticated") === "true";
     });
 
-    // ✅ Guardar en `localStorage` cada vez que `userId` o `isAuthenticated` cambian
+    // ✅ Estado del usuario autenticado (ID del usuario)
+    const [userId, setUserId] = useState(() => {
+        return localStorage.getItem("userId") || null;
+    });
+
+    // ✅ Guardar `isAuthenticated` y `userId` en `localStorage` cada vez que cambien
     useEffect(() => {
         localStorage.setItem("isAuthenticated", isAuthenticated);
         if (userId) {
@@ -26,36 +32,43 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Hook para manejar autenticación con `useNavigate()`
+// 📌 Hook personalizado para manejar las acciones de autenticación (login y logout)
 export const useAuthActions = () => {
     const navigate = useNavigate();
     const { setIsAuthenticated, setUserId } = useContext(AuthContext);
 
+    // ✅ Función de inicio de sesión (verifica email y contraseña en `users.json`)
     const login = (email, password) => {
-        if (email === "admin@ayming.com" && password === "admin") {
+        // 🔎 Buscar en `users.json` si el usuario y contraseña coinciden
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+            // 🟢 Si es válido, actualiza el estado y guarda en `localStorage`
             setIsAuthenticated(true);
-            const newUserId = `user_${email}`;
-            setUserId(newUserId);
-            localStorage.setItem("userId", newUserId); // ✅ Guarda `userId` en localStorage
-            navigate("/chatbot");
+            setUserId(user.userId);
+            console.log("🔑 Usuario autenticado:", user)
+            localStorage.setItem("userId", user.userId);
+            navigate("/chatbot"); // 🔀 Redirige al usuario a la página del chatbot
             return true;
         } else {
+            // 🔴 Si las credenciales son incorrectas, retorna `false`
             return false;
         }
     };
 
+    // ✅ Función de cierre de sesión (borra el estado y redirige al inicio)
     const logout = () => {
         setIsAuthenticated(false);
         setUserId(null);
-        localStorage.removeItem("userId"); // ✅ Borra `userId` al cerrar sesión
-        localStorage.removeItem("isAuthenticated"); // ✅ Borra estado de autenticación
-        navigate("/");
+        localStorage.removeItem("userId"); // 🗑️ Borra el ID del usuario
+        localStorage.removeItem("isAuthenticated"); // 🗑️ Borra el estado de autenticación
+        navigate("/"); // 🔀 Redirige al usuario a la página de inicio
     };
 
     return { login, logout };
 };
 
-// Hook para obtener el estado de autenticación
+// 📌 Hook para obtener el estado de autenticación en cualquier parte de la app
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
