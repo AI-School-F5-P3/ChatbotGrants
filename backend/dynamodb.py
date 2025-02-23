@@ -2,7 +2,7 @@ import boto3
 import os
 import uuid
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 from boto3.dynamodb.conditions import Key
 
@@ -21,35 +21,70 @@ dynamodb = boto3.resource(
 TABLE_NAME = "chat_history"
 table = dynamodb.Table(TABLE_NAME)
 
+# def insert_chat_messages(user_id: str, conversation_id: str, messages: List[Dict[str, str]]):
+#     """
+#     Guarda múltiples mensajes en DynamoDB dividiéndolos en ítems individuales, evitando duplicados en la clave primaria.
+#     """
+#     print("guardando")
+#     try:
+#         existing_message_ids = set()  # Evita IDs duplicados
+
+#         with table.batch_writer() as batch:
+#             for idx, msg in enumerate(messages):
+#                 message_id = str(uuid.uuid4())  # Generar un UUID único
+#                 while message_id in existing_message_ids:  # Asegurar que sea único en la ejecución actual
+#                     message_id = str(uuid.uuid4())
+
+#                 existing_message_ids.add(message_id)  # Agregar a la lista de control
+
+#                 item = {
+#                     "userId": user_id,  # Clave de partición
+#                     "conversationId": conversation_id,  # Clave de ordenación
+#                     "messageId": message_id,  # ID único garantizado
+#                     "conversation_date": msg.get("timestamp", datetime.now(timezone.utc).isoformat()),  # Marca de tiempo ISO 8601
+#                     "role": msg.get("sender", "unknown"),  # "user" o "bot"
+#                     "message_content": msg.get("text", ""),  # Contenido del mensaje
+#                     "order": idx  # Para mantener orden de los mensajes
+#                 }
+#                 batch.put_item(Item=item)  # Guarda cada mensaje como un ítem separado
+#                 print(f"✅ Mensaje insertado: {item}")
+
+#         print("✅ Conversación guardada en DynamoDB correctamente")
+#     except Exception as e:
+#         print(f"❌ Error guardando la conversación en DynamoDB: {str(e)}")
+
 def insert_chat_messages(user_id: str, conversation_id: str, messages: List[Dict[str, str]]):
     """
-    Guarda múltiples mensajes en DynamoDB dividiéndolos en ítems individuales, evitando duplicados en la clave primaria.
+    Guarda múltiples mensajes en DynamoDB, con un tiempo de expiración automático.
     """
-    print("guardando")
+    print("Guardando con TTL activado")
     try:
-        existing_message_ids = set()  # Evita IDs duplicados
+        existing_message_ids = set()
+        now = datetime.now(timezone.utc)
+        expiration_time = int((now + timedelta(days=30)).timestamp())  # Conversaciones expiran en 30 días
 
         with table.batch_writer() as batch:
             for idx, msg in enumerate(messages):
-                message_id = str(uuid.uuid4())  # Generar un UUID único
-                while message_id in existing_message_ids:  # Asegurar que sea único en la ejecución actual
+                message_id = str(uuid.uuid4())
+                while message_id in existing_message_ids:
                     message_id = str(uuid.uuid4())
 
-                existing_message_ids.add(message_id)  # Agregar a la lista de control
+                existing_message_ids.add(message_id)
 
                 item = {
-                    "userId": user_id,  # Clave de partición
-                    "conversationId": conversation_id,  # Clave de ordenación
-                    "messageId": message_id,  # ID único garantizado
-                    "conversation_date": msg.get("timestamp", datetime.now(timezone.utc).isoformat()),  # Marca de tiempo ISO 8601
-                    "role": msg.get("sender", "unknown"),  # "user" o "bot"
-                    "message_content": msg.get("text", ""),  # Contenido del mensaje
-                    "order": idx  # Para mantener orden de los mensajes
+                    "userId": user_id,
+                    "conversationId": conversation_id,
+                    "messageId": message_id,
+                    "conversation_date": msg.get("timestamp", now.isoformat()),
+                    "role": msg.get("sender", "unknown"),
+                    "message_content": msg.get("text", ""),
+                    "order": idx,
+                    "expirationTime": expiration_time  # Se usará para TTL
                 }
-                batch.put_item(Item=item)  # Guarda cada mensaje como un ítem separado
+                batch.put_item(Item=item)
                 print(f"✅ Mensaje insertado: {item}")
 
-        print("✅ Conversación guardada en DynamoDB correctamente")
+        print("✅ Conversación guardada con TTL en DynamoDB correctamente")
     except Exception as e:
         print(f"❌ Error guardando la conversación en DynamoDB: {str(e)}")
 
