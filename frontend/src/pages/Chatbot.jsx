@@ -58,7 +58,10 @@ function Chatbot() {
     return (
         <div className="h-[calc(100vh-2rem)] bg-background flex w-full">
             <main className="main relative min-h-screen-patched flex-1 bg-custom10Gray">
-                <Header />
+                <Header
+                    userId={userId}
+                    messages={messages}                
+                />
                 <Sidebar
                     onNewConversation={handleNewConversation}
                     userId={userId}

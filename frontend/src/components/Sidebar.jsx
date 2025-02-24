@@ -30,7 +30,6 @@ export function Sidebar({
 }) {
     const [openAlert, setOpenAlert] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
-    const { logout } = useAuthActions();
 
     useEffect(() => {
         if (userId) {
@@ -131,7 +130,7 @@ export function Sidebar({
                     ¿Deseas guardar la conversación actual antes de iniciar una
                     nueva?
                 </DialogBody>
-                <DialogFooter>
+                <DialogFooter className="gap-4">
                     <Button
                         variant="text"
                         color="gray"

@@ -9,12 +9,17 @@ import {
     MenuList,
     MenuItem,
     Avatar,
+    Dialog,
+    DialogHeader,
+    DialogBody,
+    DialogFooter,
 } from "@material-tailwind/react";
 import { UserCircleIcon, PowerIcon } from "@heroicons/react/24/solid";
 
 import userIcon from "/img/user.svg";
 import { Logo } from "./Logo.jsx";
 import { useAuthActions, useAuth } from "../context/AuthContext"; // ✅ Importa el hook de autenticación
+import { saveChat } from "../services/services"; // ✅ Importa la función `saveChat`
 
 // 📌 Opciones del menú de perfil
 const profileMenuItems = [
@@ -23,65 +28,114 @@ const profileMenuItems = [
 ];
 
 // 📌 Componente del menú de perfil
-const ProfileMenu = () => {
+const ProfileMenu = ({userId, messages}) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout()
     const { user } = useAuth(); // ✅ Obtiene el usuario autenticado
 
     const closeMenu = () => setIsMenuOpen(false);
 
+    const handleDialogClose = () => setOpenDialog(false);
+
+    const handleCloseSession = () => {
+        setOpenDialog(true);
+    };
+
+    const handleConfirmSave = async (save) => {
+        if (save) {
+           // guardar conversación
+           await saveChat(userId, messages);
+        }
+        await logout();
+        setOpenDialog(false);
+    };
+
     return (
-        <Menu open={isMenuOpen} handler={setIsMenuOpen} placement="bottom-end">
-            <MenuHandler>
-                <Button
-                    variant="text"
-                    className="flex items-center gap-1 rounded-full capitalize  py-0.5 pr-0 pl-4 lg:ml-auto"
-                >
-                    {user?.name}{" "}
-                    {/* ✅ Muestra el nombre o email del usuario */}
-                    <Avatar
-                        variant="circular"
-                        size="sm"
-                        alt="User"
-                        className="border-[5px] border-customLightBlue ml-2"
-                        src={userIcon}
-                    />
-                </Button>
-            </MenuHandler>
-            <MenuList className="p-1">
-                {profileMenuItems.map(({ label, icon }) => (
-                    <MenuItem
-                        key={label}
-                        onClick={label === "Salir" ? logout : closeMenu} // ✅ Llama a logout al hacer clic en "Salir"
-                        className={`flex items-center gap-2 rounded ${
-                            label === "Salir"
-                                ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
-                                : ""
-                        }`}
+        <>
+            <Menu
+                open={isMenuOpen}
+                handler={setIsMenuOpen}
+                placement="bottom-end"
+            >
+                <MenuHandler>
+                    <Button
+                        variant="text"
+                        className="flex items-center gap-1 rounded-full capitalize  py-0.5 pr-0 pl-4 lg:ml-auto"
                     >
-                        {React.createElement(icon, {
-                            className: `h-4 w-4 ${
-                                label === "Salir" ? "text-red-500" : ""
-                            }`,
-                            strokeWidth: 2,
-                        })}
-                        <Typography
-                            as="span"
-                            variant="small"
-                            className="font-normal"
-                            color={label === "Salir" ? "red" : "inherit"}
+                        {user?.name}{" "}
+                        {/* ✅ Muestra el nombre o email del usuario */}
+                        <Avatar
+                            variant="circular"
+                            size="sm"
+                            alt="User"
+                            className="border-[5px] border-customLightBlue ml-2"
+                            src={userIcon}
+                        />
+                    </Button>
+                </MenuHandler>
+                <MenuList className="p-1">
+                    {profileMenuItems.map(({ label, icon }) => (
+                        <MenuItem
+                            key={label}
+                            onClick={
+                                label === "Salir"
+                                    ? handleCloseSession
+                                    : closeMenu
+                            } // ✅ Llama a logout al hacer clic en "Salir"
+                            className={`flex items-center gap-2 rounded ${
+                                label === "Salir"
+                                    ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
+                                    : "pointer-events-auto"
+                            }`}
+                            disabled={label === "Mi perfil"? true : false}
                         >
-                            {label}
-                        </Typography>
-                    </MenuItem>
-                ))}
-            </MenuList>
-        </Menu>
+                            {React.createElement(icon, {
+                                className: `h-4 w-4 ${
+                                    label === "Salir" ? "text-red-500" : ""
+                                }`,
+                                strokeWidth: 2,
+                            })}
+                            <Typography
+                                as="span"
+                                variant="small"
+                                className="font-normal"
+                                color={label === "Salir" ? "red" : "inherit"}
+                            >
+                                {label}
+                            </Typography>
+                        </MenuItem>
+                    ))}
+                </MenuList>
+            </Menu>
+            <Dialog open={openDialog} handler={handleDialogClose}>
+                <DialogHeader>Guardar conversación</DialogHeader>
+                <DialogBody>
+                    ¿Deseas guardar la conversación actual antes de salir?
+                </DialogBody>
+                <DialogFooter className="gap-4">
+                    <Button
+                        variant="text"
+                        color="gray"
+                        onClick={() => handleConfirmSave(false)} // ✅ Llama a logout() al hacer clic en "No"
+                    >
+                        No
+                    </Button>
+                    <Button
+                        variant="gradient"
+                        color="blue"
+                        onClick={() => handleConfirmSave(true)}
+                    >
+                        Sí, guardar
+                    </Button>
+                </DialogFooter>
+            </Dialog>
+        </>
     );
 };
 
 // 📌 Componente `Header`
-export const Header = () => {
+export const Header = ({userId, messages}) => {
     const [openNav, setOpenNav] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout() para el botón "Salir"
 
@@ -101,7 +155,10 @@ export const Header = () => {
                     <Logo variant="default" />
                     <div className="flex items-center gap-4">
                         <div className="relative mx-auto flex items-center justify-between  lg:justify-start">
-                            <ProfileMenu />
+                            <ProfileMenu
+                                userId = {userId}
+                                messages = {messages}
+                            />
                         </div>
                     </div>
                 </div>
