@@ -28,7 +28,7 @@ const profileMenuItems = [
 ];
 
 // 📌 Componente del menú de perfil
-const ProfileMenu = ({userId, messages}) => {
+const ProfileMenu = ({userId, messages, isSavedConversation}) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout()
@@ -39,7 +39,12 @@ const ProfileMenu = ({userId, messages}) => {
     const handleDialogClose = () => setOpenDialog(false);
 
     const handleCloseSession = () => {
-        setOpenDialog(true);
+        if (isSavedConversation) {
+            setOpenDialog(true);
+        }
+        else {
+            logout();
+        }
     };
 
     const handleConfirmSave = async (save) => {
@@ -135,7 +140,7 @@ const ProfileMenu = ({userId, messages}) => {
 };
 
 // 📌 Componente `Header`
-export const Header = ({userId, messages}) => {
+export const Header = ({userId, messages, isSavedConversation}) => {
     const [openNav, setOpenNav] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout() para el botón "Salir"
 

@@ -60,7 +60,8 @@ function Chatbot() {
             <main className="main relative min-h-screen-patched flex-1 bg-custom10Gray">
                 <Header
                     userId={userId}
-                    messages={messages}                
+                    messages={messages} 
+                    isSavedConversation={isSavedConversation}               
                 />
                 <Sidebar
                     onNewConversation={handleNewConversation}
