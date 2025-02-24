@@ -1,19 +1,66 @@
 .main {
-  display: grid;
-  grid-template-columns: repeat(13, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  grid-column-gap: 0;
-  grid-row-gap: 0;
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos pasen a la siguiente línea */
+    width: 100%;
 }
 
 .header {
-  grid-area: 1 / 1 / 2 / 14;
+    width: 100%;
 }
 
 .sidebar {
-  grid-area: 2 / 1 / 3 / 3;
+    width: 15%;
 }
 
 .chat-area {
-  grid-area: 2 / 3 / 3 / 14;
+    width: 85%;
 }
+
+@media (max-width: 1400px) {
+  .sidebar {
+      width: 18%; 
+  }
+
+  .chat-area {
+      width: 82%; 
+  }
+}
+
+@media (max-width: 1200px) {
+  .sidebar {
+      width: 20%; 
+  }
+
+  .chat-area {
+      width: 80%; 
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+      width: 25%; 
+  }
+
+  .chat-area {
+      width: 75%; 
+  }
+}
+
+/* 📌 Punto de corte para móviles (hasta 767px) */
+// @media (max-width: 767px) {
+//   .sidebar {
+     
+//   }
+
+//   .chat-area {
+      
+//   }
+
+//   .header {
+      
+//   }
+
+//   .main {
+     
+//   }
+// }

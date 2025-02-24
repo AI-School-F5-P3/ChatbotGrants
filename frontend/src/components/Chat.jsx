@@ -13,13 +13,8 @@ import ayming from "/img/logo_icono.svg";
 import { chat, startSession } from "../services/services";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-const userId = "user_" + Math.random().toString(36).slice(2, 9);
-
-const Chat = () => {
-    const [messages, setMessages] = useState([]);
-    const [inputMessage, setInputMessage] = useState("");
+const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisabled, inputMessage, setInputMessage}) => {
     const [isTyping, setIsTyping] = useState(false);
-    const [isInputDisabled, setIsInputDisabled] = useState(false);
     const [isSessionActive, setIsSessionActive] = useState(true);
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -208,7 +203,7 @@ const Chat = () => {
     useEffect(() => {
         startSession(userId)
             .then((data) => {
-                console.log("Sesión iniciada");
+                console.log("Sesión iniciada con userId:", userId);
                 setMessages([{ sender: "bot", text: data.message }]); // Agrega el mensaje inicial del bot
             })
             .catch((err) => console.error("Error iniciando sesión:", err));
@@ -222,6 +217,7 @@ const Chat = () => {
                 behavior: "smooth",
             });
         }
+        console.log("Mensajes actualizados\n", messages);
     }, [messages]); // Se ejecuta cada vez que cambia la lista de mensajes
 
     // Manejo del envío de mensajes
@@ -260,7 +256,6 @@ const Chat = () => {
 
         setIsTyping(false);
         setIsInputDisabled(false); // Reactivar input una vez que el bot responde
-        
         // Restaurar el foco en el campo de entrada
         setTimeout(() => {
             if (inputRef.current) {
@@ -269,36 +264,17 @@ const Chat = () => {
         }, 100);
     };
 
-    const endSession = async () => {
-        try {
-            await fetch(`${API_URL}/end_session/${userId}`, {
-                method: "DELETE",
-            });
-
-            setIsSessionActive(false); // Marcar la sesión como finalizada
-
-            // Mostrar mensaje de fin de sesión en el chat
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                {
-                    sender: "bot",
-                    text: "🔚 Sesión finalizada. Gracias por usar el chatbot.",
-                },
-            ]);
-
-            console.log("Sesión finalizada");
-        } catch (error) {
-            console.error("Error ending session:", error);
-        }
-    };
+    // const handleEndSession = () => {
+    //     endSession(userId, messages, setMessages, setIsSessionActive);
+    // };
 
     return (
-        <div className="chat-area max-w-[calc(100vw-250px)] flex items-center justify-center w-full">
+        <div className="chat-area flex items-center justify-center">
             <div className="w-full h-full flex flex-col items-center justify-end gap-4 text-center text-sm text-customGray pb-8">
                 <Card
                     color="transparent"
                     shadow={false}
-                    className="flex flex-col-reverse rounded-none w-[calc(100vw-23rem)] overflow-y-auto p-0 h-[calc(100vh-16rem)] "
+                    className="flex flex-col-reverse rounded-none w-[95%] overflow-y-auto px-2 h-[calc(100vh-16rem)] "
                 >
                     <div className="mb-5">
                         {messages.map((msg, index) => (
@@ -380,8 +356,8 @@ const Chat = () => {
                         <div ref={messagesEndRef} />
                     </div>
                 </Card>
-                <form onSubmit={handleSendMessage}>
-                    <Card className="w-[calc(100vw-23rem)] flex flex-row justify-between p-2 bg-white">
+                <form onSubmit={handleSendMessage} className="w-[95%] px-2">
+                    <Card className="w-full flex flex-row justify-between p-2 bg-white">
                         <input
                             type="text"
                             ref={inputRef}

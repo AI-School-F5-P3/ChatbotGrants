@@ -18,9 +18,9 @@ class State(TypedDict):
 class GrantsBot:
     def __init__(self):
         self.FIELDS = [
-            ("Comunidad Autónoma", "Por favor, ¿podrías decirme en qué Comunidad Autónoma está el cliente ?"),
-            ("Tipo de Empresa", "¿Cuál es el tipo de empresa? (Autónomo, PYME, Gran Empresa)"),
-            ("Presupuesto del Proyecto", "¿Cuál es el presupuesto aproximado del proyecto?")
+            ("Comunidad Autónoma", "Por favor, ¿podrías decirme en qué **Comunidad Autónoma** está el cliente ?"),
+            ("Tipo de Empresa", "¿Cuál es el **tipo de empresa**? (Autónomo, PYME, Gran Empresa)"),
+            ("Presupuesto del Proyecto", "¿Cuál es el **presupuesto** aproximado del proyecto?")
         ]
         self.greeting_shown = False
 
@@ -71,7 +71,12 @@ class GrantsBot:
         
         if not messages:
             messages.extend([
-                {"role": "assistant", "content": "¡Hola! Soy un asistente virtual para ayudarte a encontrar subvenciones. Voy a hacerte algunas preguntas. "+ self.FIELDS[0][1]}
+                {"role": "assistant", "content": f"""
+¡Hola! 👋 Soy tu asistente virtual especializado en financiación empresarial. Estoy aquí para ayudarte a encontrar las mejores subvenciones para tu empresa de manera rápida y sencilla.
+
+Para empezar, necesito algunos datos clave. 
+
+{self.FIELDS[0][1]}"""}
             ])
             return {"messages": messages, "user_info": user_info, "info_complete": False}
 
@@ -105,19 +110,70 @@ class GrantsBot:
             best_grant = find_optimal_grants(user_info)
             if best_grant:
                 state["selected_grant"] = best_grant
-                prompt = f"""
-                Based on the user's information:
+                # prompt = f"""
+                # Based on the user's information:
                 
-                Region: {user_info['Comunidad Autónoma']}
-                Type: {user_info['Tipo de Empresa']}
-                Budget: {user_info['Presupuesto del Proyecto']}
+                # Region: {user_info['Comunidad Autónoma']}
+                # Type: {user_info['Tipo de Empresa']}
+                # Budget: {user_info['Presupuesto del Proyecto']}
 
-                I found the following grants:
-                {best_grant}
+                # I found the following grants:
+                # {best_grant}
 
-                Please present a summary of the grants to the user in a concise way in Spanish and ask if they would like to know more details or explore other options.
-                Your answer in markdown format.
-                """
+                # Please present a summary of the grants to the user in a concise way in Spanish and ask if they would like to know more details or explore other options.
+                # Your answer in markdown format.
+                # """
+                prompt = """
+You are an expert salesperson in business financing and grants with 20 years of experience, specializing in advising companies on financial aid opportunities. 
+**Your role is to support a salesperson who is selling grant management to companies**, so you express yourself in a tone that is **confident, professional, and results-oriented**, but also **reliable, friendly, enthusiastic, approachable and trustworthy**.
+
+### **Technical Specification:**
+- **You must generate output in Markdoc format.**  
+- **Use `{% details %}` and `{% table %}` for structured data visualization.**
+- **Ensure proper nesting of headers (`#`, `##`, `###`) for readability.**
+- **Responses must be in Spanish.**
+
+Your goal is: To present concise and attractive information about available grants based on the following data, conveying confidence that the company can access financial aid without complications and motivating the user to move forward in the process.
+
+""" + f"""
+### **User context:**
+- **Región:** {user_info['Comunidad Autónoma']}
+- **Tipo de empresa:** {user_info['Tipo de Empresa']}
+- **Presupuesto del proyecto:** {user_info['Presupuesto del Proyecto']}
+
+### **Response Structure (Markdoc Format Required):**
+- Structures the best available grants ({best_grant}).
+- Presents information in a concise and structured manner in Spanish.
+- Asks if the user wants more details or to explore other options to encourage conversation and advance the sale.
+
+""" + """
+1. **Specific grant details (Use `{% details %}`)**
+- Information presented within `{% details summary="Grant Name" %}` to allow collapsible viewing.
+- Structured tables using `{% table %}` to enhance presentation of key data.
+
+2. **Call to Action (`h3`)**
+- Asks if the user wants more details or to explore other options to encourage conversation and advance the sale.
+
+### **Example:**
+```markdown
+## Oportunidades de Financiación para su PYME en Madrid
+
+Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuesto de proyecto de 5000€, hemos identificado dos excelentes oportunidades de financiación que podrían impulsar significativamente su negocio. Permítame presentarle estas opciones:
+
+{% details summary="BDNS: 676689 · Subvenciones para el Fomento de la Contratación en Madrid" %}
+## **Subvenciones para el Fomento de la Contratación en Madrid**
+{% table %}
+| **Concepto** | **Detalle** |
+|-------------|------------|
+| **Objetivo** | Mejorar la empleabilidad e incorporar al mercado laboral a personas desempleadas, especialmente de colectivos vulnerables. |
+| **Plazo de presentación** | Abierta hasta agotar fondos. |
+| **Fondos disponibles** | 120.000.000 € |
+| **Ayuda máxima por beneficiario** | 14.000 € |
+| **BDNS** | 676689 |
+{% /table %}
+{% /details %}
+```
+"""
                 response = get_bedrock_response(prompt)
                 messages.append({"role": "assistant", "content": response["content"][0]["text"]})
                 return {**state, "messages": messages}
