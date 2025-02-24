@@ -123,12 +123,13 @@ class GrantsBot:
                 Use the following grants as context:
                 {best_grants}
 
-                All your response in Spanish, do not mention the response format. Do not make a preamble
+                Your response in 1000 words aproximately, All your response in Spanish, do not mention the response format. Do not make a preamble
 
                 Present all grants in the context and for each include: title, full slug without modification, scope, and brief summary.
                 Ask if they would like to know more details about a particular grant.
                 Your answer in Markdown format.
                 """
+                
                 response = get_bedrock_response(prompt)
                 messages.append({"role": "assistant", "content": response["content"][0]["text"]})
                 return {**state, "messages": messages}
