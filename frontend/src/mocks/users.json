@@ -1,0 +1,20 @@
+[
+    {
+        "email": "admin@ayming.com",
+        "password": "admin",
+        "userId": "user_admin",
+        "name": "María Rosa Cuenca"
+    },
+    {
+        "email": "comercial1@ayming.com",
+        "password": "password1",
+        "userId": "user_comercial_1",
+        "name": "Angela Kavrecic"
+    },
+    {
+        "email": "comercial2@ayming.com",
+        "password": "password2",
+        "userId": "user_comercial_2",
+        "name": "José Antonio Rodríguez"
+    }
+]

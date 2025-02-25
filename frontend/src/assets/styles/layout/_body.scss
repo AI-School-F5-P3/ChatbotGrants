@@ -1,0 +1,24 @@
+@use "../base/variables" as *; // Importa variables globales
+
+body {
+  background: var(--secondary-color);
+  color: var(--color-black);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+div#root {
+  width: 100vw !important;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  height: 100vh;
+}

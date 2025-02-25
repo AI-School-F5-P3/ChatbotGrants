@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: "Domine";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/domine/v23/L0x8DFMnlVwD4h3htfqndSk.woff2) format("woff2");
+  }
+
+  @font-face {
+    font-family: "Diodrum-Regular";
+    src: url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.eot");
+    src: url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.eot?#iefix") format("embedded-opentype"),
+      url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.woff2") format("woff2"),
+      url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.woff") format("woff"),
+      url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.ttf") format("truetype"),
+      url("https://db.onlinewebfonts.com/t/00f0f381aec74e3f1d85b9ed5f927de0.svg#Diodrum-Regular") format("svg");
+  }
+}

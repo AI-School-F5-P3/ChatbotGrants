@@ -1,0 +1,25 @@
+@use "../base/variables" as *;
+
+button.btn {
+  letter-spacing: 2px;
+  margin: 0 auto 3rem;
+  max-width: 37rem;
+  border-radius: 30px;
+  padding: 1.5rem 3.8rem;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--prymary-color);
+  border-radius: 25px;
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  display: inline-block;
+  font: 700 18px / 1.1 var(--font-family-base);
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  padding: 1.2rem 3rem;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}

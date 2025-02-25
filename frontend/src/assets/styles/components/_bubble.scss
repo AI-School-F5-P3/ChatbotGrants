@@ -1,0 +1,22 @@
+/* 📌 Bocadillo del mensaje */
+.c-bubble {
+    position: relative;
+    border-radius: 1rem;
+    padding: 1.2rem 1.2rem;
+    font-size: 1rem;
+    line-height: 1.4;
+
+    article {
+        width: 100vw;
+        max-width: calc(100% - 4rem) !important;
+    }
+}
+
+/* 📌 Diferenciación de estilos */
+.c-bubble--user { 
+    padding: 1.2rem;
+ }
+  
+.c-bubble--bot { 
+    padding: 1.5rem;
+ } 
