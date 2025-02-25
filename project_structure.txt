@@ -1,0 +1,18 @@
+proyecto-principal/
+│
+├── docker-compose.yml      # Archivo docker-compose integrado 
+│
+├── backend/                # Código del backend existente
+│
+├── frontend/               # Código del frontend existente
+│
+└── etl-fandit/             # Nuevo directorio para el ETL
+    ├── Dockerfile          # Definición del contenedor ETL
+    ├── requirements.txt    # Dependencias de Python
+    ├── crontab             # Programación de tareas
+    ├── entrypoint.sh       # Script de inicio
+    ├── etl_fandit.py       # Script principal ETL
+    ├── clase_apifandit.py  # Clase para API Fandit
+    ├── .env                # Variables de entorno (credenciales)
+    ├── output/             # Directorio para los archivos JSON
+    └── logs/               # Directorio para los logs
