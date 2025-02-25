@@ -1,7 +1,7 @@
 # grants_bot.py
 from typing import TypedDict, List, Dict, Optional
 from langgraph.graph import StateGraph, START, END
-from tools import load_grants, find_optimal_grants, get_grant_detail
+from tools_aurora import  find_optimal_grants, get_grant_detail
 from aws_connect import get_bedrock_response
 
 class State(TypedDict):
@@ -9,7 +9,7 @@ class State(TypedDict):
     user_info: Dict[str, str]
     userid: Optional[str]
     sessionid: Optional[str]
-    selected_grant: Optional[Dict]
+    selected_grants: Optional[Dict]
     grant_details: Optional[Dict]
     info_complete: bool
     find_grants:bool
@@ -18,9 +18,9 @@ class State(TypedDict):
 class GrantsBot:
     def __init__(self):
         self.FIELDS = [
-            ("Comunidad Autónoma", "Por favor, ¿podrías decirme en qué **Comunidad Autónoma** está el cliente ?"),
-            ("Tipo de Empresa", "¿Cuál es el **tipo de empresa**? (Autónomo, PYME, Gran Empresa)"),
-            ("Presupuesto del Proyecto", "¿Cuál es el **presupuesto** aproximado del proyecto?")
+            ("Comunidad Autónoma", "Por favor, ¿podrías decirme en qué Comunidad Autónoma está el cliente ?"),
+            ("Tipo de Empresa", "¿Cuál es el tipo de empresa? (Autónomo, PYME, Gran Empresa)"),
+            ("Presupuesto del Proyecto", "¿Cuál es el presupuesto aproximado del proyecto?"),
         ]
         self.greeting_shown = False
 
@@ -44,7 +44,14 @@ class GrantsBot:
             {True: "review_grant", False: END}
         )
 
-      
+
+        self.graph_builder.add_conditional_edges(
+            "review_grant",
+            lambda state: state.get("find_grants", False) and not state.get("discuss_grant", True),
+            {True: "find_best_grants", False: "review_grant"}
+        )
+
+            
 
         self.graph = self.graph_builder.compile()
 
@@ -55,11 +62,11 @@ class GrantsBot:
 
     def should_find_grants(self, state: State) -> bool:
         """Checks if the user would like to discuss the proposed grants"""
-        return state.get("find_grants", True)
+        return state.get("find_grants", False)
     
     def should_review_grant(self, state: State) -> bool:
         """Checks if the user would like to review the selected grant in detail"""
-        return state.get("find_grants", True)
+        return state.get("discuss_grant", False)
     
 
 
@@ -70,14 +77,16 @@ class GrantsBot:
         user_info = state.get("user_info", {})
         
         if not messages:
+            
             messages.extend([
                 {"role": "assistant", "content": f"""
-¡Hola! 👋 Soy tu asistente virtual especializado en financiación empresarial. Estoy aquí para ayudarte a encontrar las mejores subvenciones para tu empresa de manera rápida y sencilla.
+                    ¡Hola! 👋 Soy tu asistente virtual especializado. Estoy aquí para ayudarte a encontrar las mejores subvenciones para tu cliente.
 
-Para empezar, necesito algunos datos clave. 
+                    Para empezar, necesito algunos datos clave. 
 
-{self.FIELDS[0][1]}"""}
-            ])
+                    {self.FIELDS[0][1]}"""}])
+
+
             return {"messages": messages, "user_info": user_info, "info_complete": False}
 
         last_message = messages[-1]
@@ -103,84 +112,28 @@ Para empezar, necesito algunos datos clave.
         """Handles grant finding and discussion based on state messages."""
         messages = state["messages"]
         user_info = state.get("user_info", {})
-        selected_grant = state.get("selected_grant", None)
+        selected_grants = state.get("selected_grants", None)
         
         # Only do initial grant presentation if no grant selected yet
-        if not selected_grant:
-            best_grant = find_optimal_grants(user_info)
-            if best_grant:
-                state["selected_grant"] = best_grant
-                # prompt = f"""
-                # Based on the user's information:
+        if not selected_grants:
+            best_grants = find_optimal_grants(user_info)
+            if best_grants:
+                state["selected_grants"] = best_grants
+                prompt = f"""
+                Use the following grants as context:
+                {best_grants}
+
+                Your response in 1000 words aproximately, All your response in Spanish, do not mention the response format. Do not make a preamble
+
+                Present all grants in the context and for each include: title, full slug without modification, scope, and brief summary.
+                Ask if they would like to know more details about a particular grant.
+                Your answer in Markdown format.
+                """
                 
-                # Region: {user_info['Comunidad Autónoma']}
-                # Type: {user_info['Tipo de Empresa']}
-                # Budget: {user_info['Presupuesto del Proyecto']}
-
-                # I found the following grants:
-                # {best_grant}
-
-                # Please present a summary of the grants to the user in a concise way in Spanish and ask if they would like to know more details or explore other options.
-                # Your answer in markdown format.
-                # """
-                prompt = """
-You are an expert salesperson in business financing and grants with 20 years of experience, specializing in advising companies on financial aid opportunities. 
-**Your role is to support a salesperson who is selling grant management to companies**, so you express yourself in a tone that is **confident, professional, and results-oriented**, but also **reliable, friendly, enthusiastic, approachable and trustworthy**.
-
-### **Technical Specification:**
-- **You must generate output in Markdoc format.**  
-- **Use `{% details %}` and `{% table %}` for structured data visualization.**
-- **Ensure proper nesting of headers (`#`, `##`, `###`) for readability.**
-- **Responses must be in Spanish.**
-
-Your goal is: To present concise and attractive information about available grants based on the following data, conveying confidence that the company can access financial aid without complications and motivating the user to move forward in the process.
-
-""" + f"""
-### **User context:**
-- **Región:** {user_info['Comunidad Autónoma']}
-- **Tipo de empresa:** {user_info['Tipo de Empresa']}
-- **Presupuesto del proyecto:** {user_info['Presupuesto del Proyecto']}
-
-### **Response Structure (Markdoc Format Required):**
-- Structures the best available grants ({best_grant}).
-- Presents information in a concise and structured manner in Spanish.
-- Asks if the user wants more details or to explore other options to encourage conversation and advance the sale.
-
-""" + """
-1. **Specific grant details (Use `{% details %}`)**
-- Information presented within `{% details summary="Grant Name" %}` to allow collapsible viewing.
-- Structured tables using `{% table %}` to enhance presentation of key data.
-
-2. **Call to Action (`h3`)**
-- Asks if the user wants more details or to explore other options to encourage conversation and advance the sale.
-
-### **Example:**
-```markdown
-## Oportunidades de Financiación para su PYME en Madrid
-
-Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuesto de proyecto de 5000€, hemos identificado dos excelentes oportunidades de financiación que podrían impulsar significativamente su negocio. Permítame presentarle estas opciones:
-
-{% details summary="BDNS: 676689 · Subvenciones para el Fomento de la Contratación en Madrid" %}
-## **Subvenciones para el Fomento de la Contratación en Madrid**
-{% table %}
-| **Concepto** | **Detalle** |
-|-------------|------------|
-| **Objetivo** | Mejorar la empleabilidad e incorporar al mercado laboral a personas desempleadas, especialmente de colectivos vulnerables. |
-| **Plazo de presentación** | Abierta hasta agotar fondos. |
-| **Fondos disponibles** | 120.000.000 € |
-| **Ayuda máxima por beneficiario** | 14.000 € |
-| **BDNS** | 676689 |
-{% /table %}
-{% /details %}
-```
-"""
                 response = get_bedrock_response(prompt)
                 messages.append({"role": "assistant", "content": response["content"][0]["text"]})
                 return {**state, "messages": messages}
 
-        # For follow-up questions, add more context
-        last_2_messages = messages[-3:-1]
-        context_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in last_2_messages])
 
         last_message = messages[-1]
         if last_message["role"] == "user":
@@ -191,10 +144,10 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
                 
             dialogue_prompt = f"""
             The user has asked: {last_message['content']}
-            Context: {selected_grant}
-            Previous conversation (last 2 messages): {context_messages}
+            Context: {selected_grants}
+            
             Please respond in Spanish about this specific question. If the user asks anything not related to the grant, politely conduct the conversation back to the grant.
-            Be concise and your answer in markdown format.
+            Be concise and your answer in Markdown format.
 
             """
             response = get_bedrock_response(dialogue_prompt)
@@ -210,13 +163,13 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
     
 
     def review_grant(self, state: State) -> State:
-        """Reviews a specific grant in detail based on BDNS number."""
+        """Reviews a specific grant in detail based on the slug key."""
         messages = state["messages"]
         
         # First interaction - just show greeting
         if not self.greeting_shown:
             self.greeting_shown = True
-            messages.append({"role": "assistant", "content": "Por favor, introduce el número BDNS de la subvención que quieres revisar en detalle:"})
+            messages.append({"role": "assistant", "content": "Por favor, introduce el slug de la subvención que quieres revisar en detalle:"})
             state["messages"] = messages
             return state
             
@@ -228,15 +181,16 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
             
             if not grant_details:
                 # Process BDNS input
-                bdns = last_message["content"].strip()
-                detailed_grant = get_grant_detail(bdns)
+                slug = last_message["content"].strip()
+                detailed_grant = get_grant_detail(slug)
                 
                 if detailed_grant:
                     state["grant_details"] = detailed_grant
                     prompt = f"""
-                    Por favor, analiza esta subvención y presenta la información de manera estructurada en español:
 
-                    Detalles completos de la subvención:
+                    Please analyze this grant and present the information in a structured way in Spanish and do not make a preamble:
+
+                    Complete grant details:
                     {detailed_grant}
 
                     Por favor, estructura la respuesta con:
@@ -247,7 +201,7 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
                     5. Documentación necesaria
 
                     Termina preguntando si tiene alguna otra consulta
-                    Tu respuesta en formato markdown
+                    Your answer in Markdown format
                     """
                     
                     response = get_bedrock_response(prompt)
@@ -257,40 +211,30 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
                     
                 messages.append({
                     "role": "assistant",
-                    "content": "No he encontrado una subvención con ese número BDNS. ¿Quieres intentar con otro número o prefieres buscar una nueva subvención? (puedes decir 'nueva búsqueda' o 'terminar')"
+                    "content": "No he encontrado una subvención con ese slug. ¿Quieres intentar con otro código?"
                 })
                 return {**state, "messages": messages}
-            
+
             # Handle commands and dialogue after grant details are obtained
-            if "nueva búsqueda" in last_message["content"].lower():
-                self.greeting_shown = False  # Reset greeting for new search
+            
+            if "volver" in last_message["content"].lower():
+                self.greeting_shown = False  # Reset greeting for potential future use
                 state["find_grants"] = True
                 state["discuss_grant"] = False
-                state["grant_details"] = None
+                state["grant_details"] = {}
                 messages.append({
                     "role": "assistant",
-                    "content": "De acuerdo, volvamos a buscar subvenciones."
-                })
-                return {**state, "messages": messages}
-            
-            if "terminar" in last_message["content"].lower() or "fin" in last_message["content"].lower():
-                self.greeting_shown = False  # Reset greeting for potential future use
-                state["find_grants"] = False
-                state["discuss_grant"] = False
-                messages.append({
-                    "role": "assistant",
-                    "content": "¡Gracias. Si necesitas más información sobre subvenciones en el futuro, no dudes en volver a consultarme."
+                    "content": "¡Gracias!. Volvemos a analizar las subvenciones encontradas."
                 })
                 return {**state, "messages": messages}
             
             # Handle regular dialogue about the grant. For follow-up questions, add more context
-            last_2_messages = messages[-3:-1]
-            context_messages = "\n".join([f"{msg['role']}: {msg['content']}" for msg in last_2_messages])
+            
 
             dialogue_prompt = f"""
             The user has asked: {last_message['content']}
             Context: {grant_details}
-            Previous conversation (last 2 messages): {context_messages}
+            
             Please respond in Spanish about this specific question. If the user asks anything not related to the grant, politely conduct the conversation back to the grant details.
             Your response in markdown format.
             """
@@ -300,3 +244,4 @@ Estimado cliente, basándonos en su perfil como PYME en Madrid con un presupuest
             return {**state, "messages": messages}
         
         return state
+        
