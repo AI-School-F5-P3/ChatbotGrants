@@ -31,6 +31,7 @@ class UserMessage(BaseModel):
 class SessionResponse(BaseModel):
     session_id: str
     message: str
+    step: str
 
 class UserSession:
     def __init__(self, user_id: str):
@@ -209,7 +210,10 @@ async def start_session(user_data: UserMessage) -> SessionResponse:
         # Create new session
         session = session_manager.create_session(user_data.user_id)
         session.message_queue.put("")  # Trigger initial message
-        
+        if session.state["info_complete"] is False:
+            user_info_count = len(session.state.get("user_info", {}))
+            if user_info_count == 0:
+                step = "get_initial_info_1"
         try:
             response, _ = session.response_queue.get(timeout=30)
         except queue.Empty:
@@ -217,7 +221,8 @@ async def start_session(user_data: UserMessage) -> SessionResponse:
             
         return SessionResponse(
             session_id=session.session_id,
-            message=response
+            message=response,
+            step=step
         )
     except HTTPException:
         raise
@@ -225,7 +230,7 @@ async def start_session(user_data: UserMessage) -> SessionResponse:
         print(f"Error in start_session: {str(e)}")
         raise HTTPException(status_code=500, detail="Could not start session")
 
-@app.post("/chat")                                # IMPROVED
+@app.post("/chat")  # IMPROVED
 async def chat(user_data: UserMessage) -> Dict:
     """Handle chat messages with improved error handling"""
     try:
@@ -249,10 +254,31 @@ async def chat(user_data: UserMessage) -> Dict:
             
         if session_ended:
             session_manager.end_session(user_data.user_id)
-        
+
+        # Determinar el paso actual del flujo en base al estado de la sesión
+        step = "unknown"  # Valor por defecto si no se detecta un estado claro
+
+        if session.state["info_complete"] is False:
+            user_info_count = len(session.state.get("user_info", {}))
+            if user_info_count == 0:
+                step = "get_initial_info_1"
+            elif user_info_count == 1:
+                step = "get_initial_info_2"
+            elif user_info_count == 2:
+                step = "get_initial_info_3"
+            else:
+                step = "get_initial_info_complete"
+        elif session.state.get("find_grants"):
+            step = "find_best_grants"
+        elif session.state.get("discuss_grant"):
+            step = "review_grant"
+        elif not session.state.get("find_grants", True) and not session.state.get("discuss_grant", True):
+            step = "end"
+
         return {
             "message": response,
-            "session_ended": session_ended
+            "session_ended": session_ended,
+            "step": step  # Agregamos el paso actual del flujo
         }
     except HTTPException:
         raise
@@ -260,7 +286,8 @@ async def chat(user_data: UserMessage) -> Dict:
         print(f"Error in chat endpoint: {str(e)}")
         return {
             "message": "An error occurred, please try again",
-            "session_ended": True
+            "session_ended": True,
+            "step": "unknown"  # En caso de error, se mantiene como desconocido
         }
 
 @app.get("/session_state/{user_id}")

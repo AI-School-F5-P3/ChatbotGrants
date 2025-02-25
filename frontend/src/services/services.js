@@ -9,9 +9,18 @@ export async function startSession(userId) {
             user_id: userId,
         });
 
+        console.log("🔹 respuesta start -->", response.data.step);
+
         return response.data.message
-            ? response.data
-            : { message: "No se recibió mensaje del bot." };
+            ? { 
+                message: response.data.message, 
+                session_id: response.data.session_id,
+                step: response.data.step 
+              }
+            : { 
+                message: "No se recibió mensaje del bot.", 
+                step: response.data.step || "step unknown" 
+              };
     } catch (error) {
         console.error("Error starting session:", error);
         return { message: "Error al iniciar la sesión." };
@@ -33,8 +42,10 @@ export async function chat(userId, inputMessage) {
             user_id: userId,
             message: inputMessage,
         });
+        console.log("🔹 respuesta chat -->", response.data);
+        return response.data
 
-        return response.data.message;
+            
     } catch (error) {
         console.error("Error enviando el mensaje:", error);
         return "Hubo un error al procesar tu mensaje.";

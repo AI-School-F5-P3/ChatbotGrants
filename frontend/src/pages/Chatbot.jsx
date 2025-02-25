@@ -9,6 +9,7 @@ import {
 import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import Chat from "../components/Chat";
+import { step } from "@material-tailwind/react";
 
 function Chatbot() {
     const { isAuthenticated, user } = useAuth(); // Verifica si el usuario está autenticado
@@ -24,7 +25,8 @@ function Chatbot() {
             setIsSavedConversation(false); //  Reinicia el estado de conversación guardada
             setIsInputDisabled(false); //  Habilita el input para enviar mensajes
             const data = await startSession(userId);
-            setMessages([{ sender: "bot", text: data.message }]);
+            setMessages([{ sender: "bot", text: data.message, step: data.step }]);
+            console.log("🚀 Nueva conversación iniciada");
         } catch (err) {
             console.error("Error iniciando nueva sesión:", err);
         }
@@ -33,8 +35,6 @@ function Chatbot() {
     // Función para iniciar una nueva conversación
     const handleNewConversation = async (save, isSavedConversation) => {
         // Recibe un booleano para guardar o no la conversación
-        console.log("Nueva conversación iniciada");
-
         if (save | isSavedConversation) {
             //  Si el usuario eligió guardar la conversación o si ya está guardada
             await clearChat(userId, messages, setMessages); //  Solo se guarda si el usuario eligió "Sí"

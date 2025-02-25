@@ -7,15 +7,26 @@ import {
     CardBody,
     Typography,
     Avatar,
+    Select,
+    Option,
 } from "@material-tailwind/react";
 import user from "/img/user.svg";
 import ayming from "/img/logo_icono.svg";
 import { chat, startSession } from "../services/services";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisabled, inputMessage, setInputMessage}) => {
+const Chat = ({
+    userId,
+    messages,
+    setMessages,
+    isInputDisabled,
+    setIsInputDisabled,
+    inputMessage,
+    setInputMessage,
+}) => {
     const [isTyping, setIsTyping] = useState(false);
     const [isSessionActive, setIsSessionActive] = useState(true);
+    const [step, setStep] = useState("get_initial_info_1");
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
 
@@ -204,7 +215,9 @@ const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisable
         startSession(userId)
             .then((data) => {
                 console.log("Sesión iniciada con userId:", userId);
-                setMessages([{ sender: "bot", text: data.message }]); // Agrega el mensaje inicial del bot
+                setMessages([
+                    { sender: "bot", text: data.message, step: data.step },
+                ]); // Agrega el mensaje inicial del bot
             })
             .catch((err) => console.error("Error iniciando sesión:", err));
     }, []);
@@ -240,7 +253,9 @@ const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisable
         ]);
 
         try {
-            const botResponse = await chat(userId, inputMessage);
+            const response = await chat(userId, inputMessage);
+            const botResponse = response.message; // Extrae el mensaje correctamente
+            setStep(response.step); // Actualiza el paso actual
 
             // Reemplazar el mensaje del loader con la respuesta del bot
             setMessages((prevMessages) =>
@@ -357,6 +372,18 @@ const Chat = ({userId, messages, setMessages, isInputDisabled, setIsInputDisable
                     </div>
                 </Card>
                 <form onSubmit={handleSendMessage} className="w-[95%] px-2">
+                    {step !== undefined && step === "get_initial_info_1" && (
+                        <div  className="select_dropdown absolute left-[calc(15% + 2rem)] bottom-[2rem] z-[9] w-1/2 bg-white p-2 rounded-lg text-left">
+                            <Select
+                                className="select_dropdown"
+                            >
+                                <Option>Andalucía</Option>
+                                <Option>Madrid</Option>
+                                <Option>Comunidad Valenciana</Option>
+                                <Option>Galicia</Option>
+                            </Select>
+                        </div>
+                    )}
                     <Card className="w-full flex flex-row justify-between p-2 bg-white">
                         <input
                             type="text"
