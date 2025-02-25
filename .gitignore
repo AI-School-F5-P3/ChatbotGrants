@@ -66,6 +66,16 @@ coverage/
 *.out
 *.so
 
+# Caché de Vite
+.vite/
+
+#Prettier
+.prettierrc.json
+
 # Otros archivos innecesarios
 *.~*
 *.lock
+
+
+
+api/

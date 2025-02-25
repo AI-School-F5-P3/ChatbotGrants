@@ -1,0 +1,98 @@
+{
+  "grants": [
+    {
+      "is_open": true,
+      "title": "Ayudas del Programa KIT DIGITAL - Segmento III",
+      "description": "Mejorar la competitividad y el nivel de madurez digital de las pequeñas empresas, de las microempresas y de las personas en situación de autoempleo, mediante la adopción de soluciones de digitalización.",
+      "max_budget": 3000,
+      "total_amount": 1260000000,
+      "min_total_amount": null,
+      "bdns": "612093",
+      "office": "MINISTERIO DE ASUNTOS ECONÓMICOS Y TRANSFORMACIÓN DIGITAL - RED.ES",
+      "publication_date": "2022-03-15",
+      "end_date": "2025-10-31",
+      "search_tab": 1,
+      "provinces": null,
+      "applicants": [
+        "microempresas",
+        "autonomos",
+        "comunidades_bienes",
+        "sociedades_civiles"
+      ],
+      "communities": null,
+      "action_items": [
+        "sitio_web",
+        "comercio_electronico",
+        "gestion_redes_sociales",
+        "gestion_clientes",
+        "business_intelligence",
+        "oficina_virtual",
+        "gestion_procesos",
+        "factura_electronica",
+        "comunicaciones_seguras",
+        "ciberseguridad"
+      ],
+      "origins": ["nacional"],
+      "activities": ["digitalizacion"],
+      "region_types": ["nacional"],
+      "types": ["subvencion"]
+    },
+    {
+      "is_open": true,
+      "title": "Ayudas del Kit Consulting dirigidas a PYMEs",
+      "description": "El apoyo a la transformación digital de las pequeñas y medianas empresas mediante la concesión de ayudas para la contratación de servicios de asesoramiento.",
+      "max_budget": 24000,
+      "total_amount": 270000000,
+      "min_total_amount": null,
+      "bdns": "750851",
+      "office": "Ministerio para la Transformación Digital y de la Función Pública",
+      "publication_date": "2024-06-18",
+      "end_date": "2025-02-28",
+      "search_tab": 1,
+      "provinces": null,
+      "applicants": ["pyme"],
+      "communities": null,
+      "action_items": [
+        "inteligencia_artificial",
+        "analisis_datos",
+        "ventas_digitales",
+        "procesos_negocio",
+        "estrategia_negocio",
+        "ciberseguridad",
+        "transformacion_digital"
+      ],
+      "origins": ["nacional"],
+      "activities": ["asesoria_digital"],
+      "region_types": ["nacional"],
+      "types": ["subvencion"]
+    },
+    {
+      "is_open": true,
+      "title": "Línea directa de expansión (LIC-A) de CDTI a la inversión",
+      "description": "Potenciar la innovación mediante ayudas a la inversión inicial en favor de una nueva actividad económica para potenciar el crecimiento de empresas innovadoras.",
+      "max_budget": 30000000,
+      "total_amount": 56000000,
+      "min_total_amount": 175000,
+      "bdns": "694661",
+      "office": "MINISTERIO DE CIENCIA E INNOVACIÓN - CENTRO PARA EL DESARROLLO TECNOLÓGICO Y LA INNOVACIÓN E.P.E",
+      "publication_date": null,
+      "end_date": null,
+      "search_tab": 1,
+      "provinces": null,
+      "applicants": ["empresa"],
+      "communities": null,
+      "action_items": [
+        "inversion_activos",
+        "innovacion_tecnologica",
+        "mejora_capacidades"
+      ],
+      "origins": ["nacional"],
+      "activities": ["innovacion"],
+      "region_types": ["nacional", "regiones_asistidas"],
+      "types": ["prestamo", "subvencion_parcial"]
+    }
+  ],
+  "total_count": 3,
+  "page": 1,
+  "total_pages": 1
+}

@@ -1,0 +1,127 @@
+# Instrucciones para Integrar el ETL de Fandit
+
+Estas instrucciones te guiarán para integrar el ETL de Fandit con tu estructura actual de Docker Compose.
+
+## Paso 1: Preparar la estructura de directorios
+
+```bash
+# Desde la raíz de tu proyecto actual
+mkdir -p etl-fandit/output etl-fandit/logs
+```
+
+## Paso 2: Copiar los archivos del ETL
+
+Copia los siguientes archivos en el directorio `etl-fandit`:
+
+1. `etl_fandit.py` (Script principal)
+2. `clase_apifandit.py` (Clase para la API)
+3. El archivo `.env` con tus credenciales
+
+## Paso 3: Crear los archivos de configuración Docker
+
+Crea los siguientes archivos en el directorio `etl-fandit`:
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar dependencias de Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar archivos del proyecto
+COPY etl_fandit.py .
+COPY clase_apifandit.py .
+COPY .env .
+
+# Crear directorio para logs y output
+RUN mkdir -p /app/output /app/logs
+
+# Configurar cron
+COPY crontab /etc/cron.d/etl-cron
+RUN chmod 0644 /etc/cron.d/etl-cron \
+    && crontab /etc/cron.d/etl-cron
+
+# Comando para iniciar tanto el script como cron
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Ejecutar el script de entrada
+ENTRYPOINT ["/app/entrypoint.sh"]
+```
+
+### requirements.txt
+
+```
+aiohttp==3.8.5
+mysql-connector-python==8.0.33
+python-dotenv==1.0.0
+```
+
+### crontab
+
+```
+# Ejecutar ETL todos los días a las 12:00 (Hora de Madrid)
+0 12 * * * cd /app && python etl_fandit.py >> /app/logs/etl_$(date +\%Y\%m\%d).log 2>&1
+# Una línea en blanco es necesaria al final del archivo crontab
+```
+
+### entrypoint.sh
+
+```bash
+#!/bin/bash
+
+# Imprimir mensaje de inicio
+echo "Iniciando contenedor ETL Fandit..."
+
+# Verificar si el modo de ejecución automática está activado
+if [ "$ENABLE_AUTO_ETL" = "true" ]; then
+    echo "Ejecución automática ACTIVADA - El ETL se ejecutará diariamente a las 12:00 (Hora de Madrid)"
+    
+    # Iniciar el servicio cron en primer plano
+    cron -f
+else
+    echo "Ejecución automática DESACTIVADA - El ETL solo se ejecutará manualmente"
+    
+    # Mantener el contenedor en ejecución
+    tail -f /dev/null
+fi
+```
+
+## Paso 4: Actualizar el docker-compose.yml principal
+
+Reemplaza tu actual `docker-compose.yml` con la versión integrada que incluye el servicio ETL.
+
+## Paso 5: Construir y ejecutar
+
+```bash
+# Reconstruir todos los servicios
+docker-compose build
+
+# Iniciar los servicios
+docker-compose up -d
+```
+
+## Paso 6: Verificar la instalación
+
+```bash
+# Verificar que el contenedor ETL esté ejecutándose
+docker ps | grep etl-fandit
+
+# Probar la ejecución manual
+docker exec etl-fandit python /app/etl_fandit.py
+```
+
+## Notas importantes:
+
+1. La ejecución automática está desactivada por defecto
+2. Los logs se guardarán en `./etl-fandit/logs/`
+3. Los archivos JSON de respaldo se guardarán en `./etl-fandit/output/`
