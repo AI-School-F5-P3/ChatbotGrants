@@ -1,4 +1,5 @@
-# Chatbot Grants
+![](./chatbotgrants.png)
+
 
 Sistema de chat inteligente para identificación y evaluación de subvenciones, diseñado para ayudar a comerciales y clientes a encontrar y evaluar oportunidades de financiación.
 
