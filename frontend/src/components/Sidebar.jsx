@@ -124,13 +124,14 @@ export function Sidebar({
                 </Typography>
             </Alert>
 
-            <Dialog open={openDialog} handler={handleDialogClose}>
-                <DialogHeader>Guardar conversación</DialogHeader>
-                <DialogBody>
-                    ¿Deseas guardar la conversación actual antes de iniciar una
-                    nueva?
+            <Dialog size = "xs" open={openDialog} handler={handleDialogClose} className="px-4">
+                <DialogHeader>
+                    <h2>Guardar conversación</h2>
+                </DialogHeader>
+                <DialogBody className="pt-0">
+                    ¿Deseas guardar la conversación actual antes de salir?
                 </DialogBody>
-                <DialogFooter className="gap-4">
+                <DialogFooter className="pt-10 gap-4">
                     <Button
                         variant="text"
                         color="gray"
@@ -143,7 +144,7 @@ export function Sidebar({
                         color="blue"
                         onClick={() => handleConfirmNewConversation(true)}
                     >
-                        Sí, guardar
+                        Guardar
                     </Button>
                 </DialogFooter>
             </Dialog>

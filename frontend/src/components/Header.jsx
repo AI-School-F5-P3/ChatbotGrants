@@ -33,13 +33,14 @@ const ProfileMenu = ({userId, messages, isSavedConversation}) => {
     const [openDialog, setOpenDialog] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout()
     const { user } = useAuth(); // ✅ Obtiene el usuario autenticado
-
+    console.log("En profile -> isSavedConversation", isSavedConversation);
     const closeMenu = () => setIsMenuOpen(false);
 
     const handleDialogClose = () => setOpenDialog(false);
 
     const handleCloseSession = () => {
-        if (isSavedConversation) {
+        console.log(isSavedConversation);
+        if (!isSavedConversation) {
             setOpenDialog(true);
         }
         else {
@@ -113,12 +114,14 @@ const ProfileMenu = ({userId, messages, isSavedConversation}) => {
                     ))}
                 </MenuList>
             </Menu>
-            <Dialog open={openDialog} handler={handleDialogClose}>
-                <DialogHeader>Guardar conversación</DialogHeader>
-                <DialogBody>
+            <Dialog size = "xs" open={openDialog} handler={handleDialogClose} className="px-4">
+                <DialogHeader>
+                    <h2>Guardar conversación</h2>
+                </DialogHeader>
+                <DialogBody className="pt-0">
                     ¿Deseas guardar la conversación actual antes de salir?
                 </DialogBody>
-                <DialogFooter className="gap-4">
+                <DialogFooter className="pt-10 gap-4">
                     <Button
                         variant="text"
                         color="gray"
@@ -131,7 +134,7 @@ const ProfileMenu = ({userId, messages, isSavedConversation}) => {
                         color="blue"
                         onClick={() => handleConfirmSave(true)}
                     >
-                        Sí, guardar
+                        Guardar
                     </Button>
                 </DialogFooter>
             </Dialog>
@@ -143,7 +146,7 @@ const ProfileMenu = ({userId, messages, isSavedConversation}) => {
 export const Header = ({userId, messages, isSavedConversation}) => {
     const [openNav, setOpenNav] = useState(false);
     const { logout } = useAuthActions(); // ✅ Obtiene logout() para el botón "Salir"
-
+    console.log("Al entrar en Header -> isSavedConversation", isSavedConversation);
     useEffect(() => {
         window.addEventListener("resize", () => {
             if (window.innerWidth >= 960) setOpenNav(false);
@@ -163,6 +166,7 @@ export const Header = ({userId, messages, isSavedConversation}) => {
                             <ProfileMenu
                                 userId = {userId}
                                 messages = {messages}
+                                isSavedConversation = {isSavedConversation}
                             />
                         </div>
                     </div>
