@@ -1,18 +1,125 @@
-proyecto-principal/
+ChatbotGrants/
 │
-├── docker-compose.yml      # Archivo docker-compose integrado 
+├── README.md                   # Project documentation
+├── chatbotgrants.png           # Project diagram/logo
+├── docker-compose.yml          # Main Docker composition file
+├── requirements.txt            # Root level dependencies
+├── project_structure.txt       # Project structure file
 │
-├── backend/                # Código del backend existente
+├── backend/                    # Backend code
+│   ├── __init__.py             # Package initialization
+│   ├── aws_connect.py          # AWS services connection module
+│   ├── Dockerfile              # Backend container definition
+│   ├── dynamodb.py             # DynamoDB integration for chat history
+│   ├── etl_fandit.py           # ETL implementation (backend version)
+│   ├── grants_bot.py           # Core chatbot logic using LangGraph
+│   ├── grants_detail.json      # Sample grant details data
+│   ├── grants_search.json      # Sample grant search data
+│   ├── main.py                 # FastAPI application with endpoints
+│   ├── requirements.txt        # Backend dependencies
+│   ├── tools.py                # Utility tools
+│   └── tools_aurora.py         # Database operations for grants
 │
-├── frontend/               # Código del frontend existente
+├── etl_fandit/                 # ETL system for Fandit API
+│   ├── __init__.py             # Package initialization
+│   ├── api_to_json.py          # API to JSON conversion utilities
+│   ├── clase_apifandit.py      # Fandit API client
+│   ├── cronotab                # Cron job configuration
+│   ├── db_data_load.py         # Database loading script
+│   ├── db_setup.py             # Database initialization
+│   ├── docker-compose.yml      # ETL specific Docker composition
+│   ├── Dockerfile              # ETL container definition
+│   ├── eda_fandit.py           # Exploratory data analysis script
+│   ├── entrypoint.sh           # Container startup script
+│   ├── etl_fandit.py           # Main ETL process implementation
+│   ├── README_ETL.md           # ETL documentation
+│   ├── requirements.txt        # ETL dependencies
+│   ├── setup_instructions.txt  # ETL setup guide
+│   ├── output/                 # Directory for ETL output files
+│   │   ├── api_assestment.txt                    # API assessment notes
+│   │   ├── respuesta_funds_endpoint_debug_20250219_130939.json # Debug response
+│   │   ├── subvenciones_20250219_123032.csv      # Grants data as CSV
+│   │   ├── subvenciones_20250219_123032.json     # Grants data as JSON
+│   │   ├── subvenciones_20250219_123032.ods      # Grants data as ODS
+│   │   ├── subvenciones_20250220_111707.csv      # Updated grants data as CSV
+│   │   ├── subvenciones_20250220_111707.json     # Updated grants data as JSON
+│   │   ├── subvenciones_20250220_111707.ods      # Updated grants data as ODS
+│   │   └── subvenciones_20250220_111707-sample.json # Sample grants data
+│   └── tests/                  # ETL test directory
+│       ├── test_api_2.py       # Additional API test script
+│       ├── test_api_3.py       # Additional API test script
+│       ├── test_api_4-jose.py  # Custom API test script
+│       └── test_api_5.py       # Additional API test script
 │
-└── etl-fandit/             # Nuevo directorio para el ETL
-    ├── Dockerfile          # Definición del contenedor ETL
-    ├── requirements.txt    # Dependencias de Python
-    ├── crontab             # Programación de tareas
-    ├── entrypoint.sh       # Script de inicio
-    ├── etl_fandit.py       # Script principal ETL
-    ├── clase_apifandit.py  # Clase para API Fandit
-    ├── .env                # Variables de entorno (credenciales)
-    ├── output/             # Directorio para los archivos JSON
-    └── logs/               # Directorio para los logs
+└── frontend/                   # React frontend application
+    ├── Dockerfile              # Frontend container definition
+    ├── README.md               # Frontend documentation
+    ├── eslint.config.js        # ESLint configuration
+    ├── index.html              # Main HTML entry point
+    ├── nginx.conf              # Nginx web server configuration
+    ├── package.json            # Frontend dependencies
+    ├── postcss.config.cjs      # PostCSS configuration
+    ├── tailwind.config.js      # Tailwind CSS configuration
+    ├── vite.config.js          # Vite bundler configuration
+    ├── public/                 # Public assets
+    │   └── img/                # Image assets
+    │       ├── logo.svg                  # Main logo
+    │       ├── logo_blanco_transparente.svg # White transparent logo
+    │       ├── logo_icono.svg            # Icon logo
+    │       └── user.svg                  # User icon
+    └── src/                    # Source code
+        ├── main.jsx            # Main JavaScript entry point
+        ├── assets/             # Static assets
+        │   ├── images/         # Image files
+        │   │   ├── logo.svg    # Logo image
+        │   │   └── user.svg    # User icon
+        │   └── styles/         # CSS styles
+        │       ├── app.css     # Main application styles
+        │       ├── main.css    # Compiled CSS
+        │       ├── main.css.map # CSS source map
+        │       ├── main.scss   # Main SCSS file
+        │       ├── base/       # Base styles
+        │       │   ├── _index.scss      # Base styles index
+        │       │   ├── _mixins.scss     # SCSS mixins
+        │       │   ├── _root.scss       # Root styles
+        │       │   ├── _typography.scss # Typography styles
+        │       │   └── _variables.scss  # SCSS variables
+        │       ├── components/ # Component-specific styles
+        │       │   ├── _bubble.scss     # Chat bubble styles
+        │       │   ├── _buttons.scss    # Button styles
+        │       │   ├── _chat.scss       # Chat component styles
+        │       │   ├── _details.scss    # Details component styles
+        │       │   ├── _index.scss      # Components index
+        │       │   ├── _inputs.scss     # Input field styles
+        │       │   ├── _logos.scss      # Logo styles
+        │       │   └── _tables.scss     # Table styles
+        │       ├── layout/     # Layout styles
+        │       │   ├── _body.scss       # Body styles
+        │       │   ├── _footer.scss     # Footer styles
+        │       │   ├── _grid.scss       # Grid system styles
+        │       │   └── _index.scss      # Layout index
+        │       └── utils/      # Utility styles
+        │           ├── _animations.scss # Animation styles
+        │           ├── _helpers.scss    # Helper utilities
+        │           ├── _index.scss      # Utils index
+        │           └── _tailwind.scss   # Tailwind utilities
+        ├── components/         # Reusable UI components
+        │   ├── Chat.jsx        # Chat interface component
+        │   ├── Footer.jsx      # Footer component
+        │   ├── Header.jsx      # Application header
+        │   ├── Logo.jsx        # Logo component
+        │   ├── MarkdownRenderer.jsx # Rich text rendering
+        │   └── Sidebar.jsx     # Conversation history panel
+        ├── context/            # React contexts
+        │   └── AuthContext.jsx # Authentication context provider
+        ├── layout/             # Layout components
+        │   └── Layout.jsx      # Main application layout
+        ├── mocks/              # Mock data
+        │   └── users.json      # Mock user data for authentication
+        ├── pages/              # Application pages
+        │   ├── Chatbot.jsx     # Main chat page
+        │   └── Home.jsx        # Login page
+        ├── router/             # Routing configuration
+        │   └── Router.jsx      # Application routing
+        └── services/           # API services
+            └── services.js     # API integration functions

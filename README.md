@@ -1,176 +1,231 @@
 ![](./chatbotgrants.png)
 
+An intelligent chat system for grant identification and evaluation, designed to help sales representatives and customers find and assess funding opportunities.
 
-Sistema de chat inteligente para identificación y evaluación de subvenciones, diseñado para ayudar a comerciales y clientes a encontrar y evaluar oportunidades de financiación.
+## 🎯 Main Objective
 
-## 🎯 Objetivo Principal
+Develop an intelligent chat system that allows sales representatives and clients to:
+- Identify available grants
+- Evaluate eligibility for specific projects
+- Determine the suitability of grants
+- Maximize possible financing returns
+- Interact naturally with queries about grants
 
-Desarrollar un sistema de chat inteligente que permita a comerciales y clientes:
-- Identificar subvenciones disponibles
-- Evaluar elegibilidad para proyectos específicos
-- Determinar la adecuación de subvenciones
-- Maximizar el retorno posible de financiación
-- Interactuar de manera natural con consultas sobre subvenciones
+## 🏗️ Architecture
 
-## 🏗️ Arquitectura
-
-El sistema está compuesto por los siguientes componentes principales:
+The system consists of the following main components:
 
 ### Frontend
-- Interfaz de chat interactiva
-- Desarrollado en React
-- Diseño responsive
-- Integración con sistema de autenticación
+- Interactive chat interface
+- Developed in React with Material Tailwind
+- Responsive design
+- Authentication system
+- Markdown rendering for rich responses
 
 ### Backend
-- Servicios en contenedores
-- Integración con API de subvenciones (Fandit)
-- Sistema ETL para gestión de datos
-- Base de datos intermedia para filtrado
+- FastAPI containerized services
+- Integration with Fandit grants API
+- LangGraph state machine for conversation flow
+- ETL system for data management
+- Intermediate database for efficient filtering
 
-### Servicios AWS
-- **Bedrock**: Motor de IA para procesamiento de lenguaje natural
-- **Kendra**: Sistema de búsqueda inteligente
-- **S3**: Almacenamiento de documentos
-- **DynamoDB**: Base de datos de alta velocidad
-- **EC2**: Instancias para despliegue de servicios
+### AWS Services
+- **Bedrock**: AI engine for natural language processing
+- **DynamoDB**: High-speed database for chat history
+- **Aurora**: MySQL database for grant information
+- **EC2**: Instances for service deployment
 
-### Seguridad
-- **KeyCloak**: Sistema de autenticación para comerciales
-- Security Groups configurados
-- Protección de datos GDPR
+## ⚡ Key Features
 
-## ⚡ Características Clave
+1. **Intelligent Chat Interface**
+   - Natural language interaction
+   - Contextualized responses
+   - Automatic eligibility assessment
+   - Conversation history
 
-1. **Interfaz de Chat Inteligente**
-   - Interacción en lenguaje natural
-   - Respuestas contextualizadas
-   - Evaluación automática de elegibilidad
+2. **Data Management**
+   - Integration with Fandit API
+   - Intermediate database for efficient filtering
+   - Automatic information updates via ETL
+   - TTL-based expiration for conversation data
 
-2. **Gestión de Datos**
-   - Integración con API de Fandit
-   - Base de datos intermedia para filtrado eficiente
-   - Actualización automática de información
+3. **Grant Analysis**
+   - Filtering by region, company type, and budget
+   - Detailed grant information
+   - Eligibility criteria matching
+   - Grant comparison
 
-3. **Procesamiento de Documentos**
-   - Soporte para archivos PDF
-   - Análisis de documentación
-   - Almacenamiento seguro
+4. **Session Management**
+   - Concurrent user sessions
+   - Conversation persistence
+   - Automatic cleanup of inactive sessions
+   - Chat history retrieval
 
-4. **Sistema de Filtrado**
-   - Búsqueda por sector
-   - Filtrado por cuantía
-   - Selección por región
-   - Criterios de elegibilidad
+## 🚀 Technical Requirements
 
-## 🚀 Requisitos Técnicos
+### Functional
+- User authentication
+- Natural language interaction
+- Advanced filtering system
+- Intermediate database
+- Query processing
+- Conversation management
 
-### Funcionales
-- Autenticación de usuarios
-- Interacción en lenguaje natural
-- Gestión de archivos PDF
-- Sistema de filtrado avanzado
-- Base de datos intermedia
-- Procesamiento de consultas
+### Non-Functional
+- High availability
+- Optimized performance
+- Responsive design
+- Data security
+- Scalability
 
-### No Funcionales
-- Alta disponibilidad
-- Rendimiento optimizado
-- Diseño responsive
-- Seguridad de datos
-- Escalabilidad
+## 💻 Technologies
 
-## 💻 Tecnologías
+- **Frontend**: React, Material Tailwind, Markdoc
+- **Backend**: Python, FastAPI, LangGraph
+- **AI**: AWS Bedrock
+- **Databases**: Aurora MySQL, DynamoDB
+- **ETL**: Custom Python pipeline
+- **Authentication**: Context-based with JWT
+- **Containers**: Docker
+- **Deployment**: Docker Compose
 
-- **Frontend**: React
-- **Backend**: Python
-- **IA**: AWS Bedrock
-- **Base de Datos**: PostgreSQL (RDS)
-- **Almacenamiento**: AWS S3
-- **Autenticación**: KeyCloak
-- **Contenedores**: Docker
-- **Orquestación**: AWS Fargate
+## 🛠️ Installation and Development
 
-## 🛠️ Instalación y Desarrollo
-
-### Prerrequisitos
-- Cuenta AWS
-- Docker y Docker Compose
-- Node.js y npm
+### Prerequisites
+- AWS Account
+- Docker and Docker Compose
+- Node.js and npm
 - Python 3.9+
 - Git
 
-### Configuración del Entorno
-1. Clonar el repositorio
-2. Configurar variables de entorno
-3. Instalar dependencias
-4. Configurar servicios AWS
+### Environment Configuration
+1. Clone the repository
+   ```bash
+   git clone https://github.com/AI-School-F5-P3/ChatbotGrants.git
+   cd ChatbotGrants
+   ```
 
-### Estructura del Proyecto
+2. Configure environment variables
+   ```bash
+   # In backend directory
+   cp .env.example .env
+   # Edit .env with your credentials
+
+   # In etl_fandit directory
+   cp .env.example .env
+   # Edit .env with your Fandit API credentials
+   ```
+
+3. Start the services
+   ```bash
+   docker-compose up -d
+   ```
+
+### Project Structure
 ```
-chatbot-grants/
-├── frontend/          # Aplicación React
-├── backend/           # Servicios Python
-│   ├── etl/          # Sistema ETL
-│   ├── api/          # API REST
-│   └── chat/         # Lógica del chatbot
-├── infrastructure/    # Configuración AWS
-└── docs/             # Documentación
+ChatbotGrants/
+├── README.md                   # This documentation
+├── docker-compose.yml          # Main Docker composition file
+├── requirements.txt            # Root level dependencies
+│
+├── backend/                    # Backend Python code
+│   ├── aws_connect.py          # AWS services connection module
+│   ├── Dockerfile              # Backend container definition
+│   ├── dynamodb.py             # DynamoDB integration for chat history
+│   ├── grants_bot.py           # Core chatbot logic using LangGraph
+│   ├── main.py                 # FastAPI application with endpoints
+│   ├── requirements.txt        # Backend dependencies
+│   └── tools_aurora.py         # Database operations for grants
+│
+├── frontend/                   # React application
+│   ├── Dockerfile              # Frontend container definition
+│   ├── package.json            # Frontend dependencies
+│   ├── public/                 # Static assets
+│   │   └── img/                # Image assets
+│   └── src/                    # Source code
+│       ├── components/         # UI components
+│       ├── context/            # React contexts
+│       ├── pages/              # Application pages
+│       ├── services/           # API services
+│       └── assets/             # Styles and images
+│
+└── etl_fandit/                 # ETL system for Fandit API
+    ├── clase_apifandit.py      # Fandit API client
+    ├── db_setup.py             # Database initialization
+    ├── etl_fandit.py           # Main ETL process implementation
+    ├── Dockerfile              # ETL container definition
+    ├── requirements.txt        # ETL dependencies
+    ├── README.md               # ETL documentation
+    ├── output/                 # Directory for ETL output files
+    └── tests/                  # ETL test directory
 ```
 
-## 📝 API y Recursos
+## 📝 API and Resources
 
-### API de Fandit
-- Endpoint: `https://fandit.es/api/business`
-- Límite: 200 consultas mensuales
-- Actualización: Diaria a las 13:00
+### Fandit API
+- Endpoint: `https://ayming.api.fandit.es/api/v2`
+- Update frequency: Daily
+- Grant filters supported:
+  - is_open
+  - start_date
+  - end_date
+  - provinces
+  - communities
+  - action_items
+  - activities
+  - region_types
 
-### Filtros Disponibles
-- is_open
-- search_by_text
-- max_budget
-- max_total_amount
-- min_total_amount
-- Otros filtros específicos
+### Backend API Endpoints
+- `/start_session`: Initialize a chat session
+- `/chat`: Process messages
+- `/end_session/{user_id}`: End a user session
+- `/save_chat`: Save conversation to DynamoDB
+- `/get_chat_messages`: Get messages for a conversation
+- `/get_user_conversations/{user_id}`: List user conversations
 
-## 🔄 Flujo de Trabajo
+## 🔄 Workflow
 
-1. **Entrada de Usuario**
-   - Consulta en lenguaje natural
-   - Carga de documentos
-   - Selección de filtros
+1. **User Input**
+   - Natural language query
+   - Basic information collection
+   - Grant selection
 
-2. **Procesamiento**
-   - Análisis de consulta
-   - Búsqueda en base de datos
-   - Evaluación de elegibilidad
+2. **Processing**
+   - Query analysis
+   - Database search
+   - Eligibility evaluation
+   - LangGraph state transitions
 
-3. **Respuesta**
-   - Subvenciones relevantes
-   - Análisis de adecuación
-   - Recomendaciones
+3. **Response**
+   - Relevant grants
+   - Suitability analysis
+   - Recommendations
+   - Rich text formatting
 
-## 📊 Monitoreo y Mantenimiento
+## 📊 Monitoring and Maintenance
 
-- Logs del sistema
-- Métricas de uso
-- Control de cuota API
-- Backups de base de datos
+- System logs
+  - Backend logs
+  - ETL process logs
+  - DynamoDB TTL enforcement
+- API quota control
+- Database backups
+- Inactive session cleanup
 
-## 👥 Equipo y Soporte
+## 👥 Team and Support
 
-- Desarrollo Frontend
-- Desarrollo Backend
+- Frontend Development
+- Backend Development
 - DevOps
-- Equipo de Negocio
+- Business Team
 
-## 📫 Contacto y Ayuda
+## 📫 Contact and Help
 
-Para soporte y consultas:
-- Crear issue en el repositorio
-- Contactar al equipo de desarrollo
-- Consultar documentación interna
+For support and inquiries:
+- Create an issue in the repository
+- Contact the development team
+- Consult internal documentation
 
-## 📜 Licencia
+## 📜 License
 
-Este es un proyecto pedagógico y público.
+This is a public educational project.
