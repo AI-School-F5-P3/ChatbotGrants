@@ -102,14 +102,16 @@ class GrantQueries:
         self.Session = sessionmaker(bind=self.engine)
      
     
-    def find_adequate_grants(self, min_amount: float, region: str) -> List[Grant]:
+    def find_adequate_grants(self, min_amount: float, region: str, tipo_empresa: str = None) -> List[Grant]:
         """
         Find all grants with a request_amount greater than or equal to the specified amount
         AND with a scope that matches either 'Estatal' or the provided region's scope
-        
+        AND filters based on company type 
+
         Parameters:
         min_amount (float): Minimum request amount to search for
         region (str): Region (Comunidad Autónoma) to search for (will also include 'Estatal')
+        tipo_empresa (str): Type of company (e.g., "Pyme", "gran empresa", "autónomo")
         
         Returns:
         List[Grant]: List of Grant objects matching the criteria
@@ -122,15 +124,45 @@ class GrantQueries:
                 print(f"Warning: Unknown region '{region}'. Only searching for 'Estatal' grants.")
                 scope = "UNKNOWN"  # This ensures we'll still get Estatal grants
             
-            grants = session.query(Grant)\
-                          .filter(Grant.request_amount >= min_amount)\
-                          .filter(or_(Grant.scope == 'Estatal', Grant.scope == scope))\
-                          .order_by(Grant.request_amount.desc())\
-                          .all()
+            # Base query
+            query = session.query(Grant)\
+                        .filter(Grant.request_amount >= min_amount)\
+                        .filter(or_(Grant.scope == 'Estatal', Grant.scope == scope))
+            
+            # Add company type filters
+            if tipo_empresa:
+                tipo_lower = tipo_empresa.lower()
+                
+                if tipo_lower == "pyme":
+                    # Look for "pyme" or "pequeña" in the applicants field
+                    query = query.filter(
+                        or_(
+                            Grant.applicants.ilike("%pyme%"),
+                            Grant.applicants.ilike("%pequeña%")
+                        )
+                    )
+                elif tipo_lower == "gran empresa":
+                    # Look for "gran" or "grandes" in the applicants field
+                    query = query.filter(
+                        or_(
+                            Grant.applicants.ilike("%gran%"),
+                            Grant.applicants.ilike("%grandes%")
+                        )
+                    )
+                elif tipo_lower == "autónomo":
+                    # Look for "autónomo" or "emprendedores" in the applicants field
+                    query = query.filter(
+                        or_(
+                            Grant.applicants.ilike("%autónomo%"),
+                            Grant.applicants.ilike("%emprendedores%")
+                        )
+                    )
+            
+            # Execute query and return results
+            grants = query.order_by(Grant.request_amount.desc()).all()
             return grants
         finally:
             session.close()
-
 
     def find_unique_grant(self, partial_slug: str) -> Grant:
         """
@@ -152,8 +184,6 @@ class GrantQueries:
             session.close()
 
 
-
-
 def find_optimal_grants(user_info: dict) -> dict:
     """
     Find optimal grants by combining SQL filtering with LLM-based analysis of user fit.
@@ -164,7 +194,6 @@ def find_optimal_grants(user_info: dict) -> dict:
             - Tipo de Empresa: Company type
             - Presupuesto del Proyecto: Project budget
            
-    
     Returns:
         dict: Dictionary containing:
             - 'recommended_grants': List of grants recommended 
@@ -174,13 +203,13 @@ def find_optimal_grants(user_info: dict) -> dict:
     # Get grants matching basic criteria
     found_grants = query.find_adequate_grants(
         min_amount=user_info.get('Presupuesto del Proyecto', 0),
-        region=user_info.get('Comunidad Autónoma')
+        region=user_info.get('Comunidad Autónoma'),
+        tipo_empresa=user_info.get('Tipo de Empresa')
     )
     
     # If no adequate grants found, return empty dict
     if not found_grants:
         return {}
-
 
     # Prepare minimized context for the LLM - only essential fields
     recommended_grants = [{
@@ -191,9 +220,6 @@ def find_optimal_grants(user_info: dict) -> dict:
         'applicants': grant.applicants[:150] if grant.applicants else "",
         'line': grant.line[:150] if grant.line else ""
     } for grant in found_grants[:15]]  # Limit to top 15 grants
-
-    
-
     
     # Only return results if we found recommended grants
     if recommended_grants:
@@ -201,8 +227,6 @@ def find_optimal_grants(user_info: dict) -> dict:
             "recommended_grants": recommended_grants,
         }
     return {}
-        
-    
 
 def get_grant_detail(slug: str) -> dict:
     """
@@ -221,6 +245,5 @@ def get_grant_detail(slug: str) -> dict:
         # Convert grant object to dictionary using the existing to_dict method
         return grant.to_dict()
     return {}
-
 
 

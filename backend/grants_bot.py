@@ -1,7 +1,7 @@
 # grants_bot.py
 from typing import TypedDict, List, Dict, Optional
 from langgraph.graph import StateGraph, START, END
-from tools_aurora import  find_optimal_grants, get_grant_detail
+from tools_aurora import find_optimal_grants, get_grant_detail
 from aws_connect import get_bedrock_response
 
 class State(TypedDict):
@@ -12,7 +12,7 @@ class State(TypedDict):
     selected_grants: Optional[Dict]
     grant_details: Optional[Dict]
     info_complete: bool
-    find_grants:bool
+    find_grants: bool
     discuss_grant: bool
 
 class GrantsBot:
@@ -44,17 +44,58 @@ class GrantsBot:
             {True: "review_grant", False: END}
         )
 
-
         self.graph_builder.add_conditional_edges(
             "review_grant",
             lambda state: state.get("find_grants", False) and not state.get("discuss_grant", True),
             {True: "find_best_grants", False: "review_grant"}
         )
 
-            
-
         self.graph = self.graph_builder.compile()
 
+    def validate_company_type(self, company_type: str) -> tuple[bool, str]:
+        """
+        Validates if the company type input matches one of the allowed values.
+        
+        Args:
+            company_type: String input for company type
+            
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        valid_types = ["autónomo", "pyme", "gran empresa"]
+        if company_type.lower().strip() in valid_types:
+            return True, ""
+        return False, "Por favor, introduce un tipo de empresa válido: Autónomo, PYME, o Gran Empresa."
+    
+    def validate_budget(self, budget_str: str) -> tuple[bool, str]:
+        """
+        Validates if the budget input is a number greater than 0.
+        
+        Args:
+            budget_str: String input for budget
+            
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        # Remove any currency symbols and spaces
+        cleaned_input = budget_str.replace('€', '').replace('$', '').strip()
+        
+        try:
+            # Handle European number format (comma as decimal separator)
+            if ',' in cleaned_input:
+                # Replace the comma with a period for decimal point
+                cleaned_input = cleaned_input.replace('.', '').replace(',', '.')
+            else:
+                # US format - just remove any commas
+                cleaned_input = cleaned_input.replace(',', '')
+            
+            # Try to convert to a number
+            budget_value = float(cleaned_input)
+            if budget_value <= 0:
+                return False, "El presupuesto debe ser mayor que 0. Por favor, introduce un valor válido."
+            return True, ""
+        except ValueError:
+            return False, "Por favor, introduce un valor numérico para el presupuesto del proyecto."
 
     def is_info_complete(self, state: State) -> bool:
         """Checks if all required information has been collected."""
@@ -68,16 +109,12 @@ class GrantsBot:
         """Checks if the user would like to review the selected grant in detail"""
         return state.get("discuss_grant", False)
     
-
-
-
     def get_initial_info(self, state: State) -> State:
         """Collects initial information from the user."""
         messages = state.get("messages", [])
         user_info = state.get("user_info", {})
         
         if not messages:
-            
             messages.extend([
                 {"role": "assistant", "content": f"""
                     ¡Hola! 👋 Soy tu asistente virtual especializado. Estoy aquí para ayudarte a encontrar las mejores subvenciones para tu cliente.
@@ -86,7 +123,6 @@ class GrantsBot:
 
                     {self.FIELDS[0][1]}"""}])
 
-
             return {"messages": messages, "user_info": user_info, "info_complete": False}
 
         last_message = messages[-1]
@@ -94,7 +130,30 @@ class GrantsBot:
             current_field_idx = len(user_info)
             if current_field_idx < len(self.FIELDS):
                 field_name = self.FIELDS[current_field_idx][0]
-                user_info[field_name] = last_message["content"].strip()
+                user_input = last_message["content"].strip()
+                
+                # Validation based on field type
+                if field_name == "Tipo de Empresa":
+                    is_valid, error_msg = self.validate_company_type(user_input)
+                    if not is_valid:
+                        # If validation fails, ask again with error message
+                        messages.append({
+                            "role": "assistant", 
+                            "content": f"{error_msg}\n\n{self.FIELDS[current_field_idx][1]}"
+                        })
+                        return {"messages": messages, "user_info": user_info, "info_complete": False}
+                elif field_name == "Presupuesto del Proyecto":
+                    is_valid, error_msg = self.validate_budget(user_input)
+                    if not is_valid:
+                        # If validation fails, ask again with error message
+                        messages.append({
+                            "role": "assistant", 
+                            "content": f"{error_msg}\n\n{self.FIELDS[current_field_idx][1]}"
+                        })
+                        return {"messages": messages, "user_info": user_info, "info_complete": False}
+                
+                # Store the valid input
+                user_info[field_name] = user_input
                 
                 if current_field_idx + 1 < len(self.FIELDS):
                     next_field, next_prompt = self.FIELDS[current_field_idx + 1]
@@ -105,7 +164,6 @@ class GrantsBot:
                     return {"messages": messages, "user_info": user_info, "info_complete": True, "find_grants":True}
             
         return {"messages": messages, "user_info": user_info, "info_complete": False}
-
     
 
     def find_best_grants(self, state: State) -> State:
@@ -244,4 +302,3 @@ class GrantsBot:
             return {**state, "messages": messages}
         
         return state
-        
