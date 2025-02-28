@@ -20,9 +20,6 @@ etl_fandit/
 ├── README_ETL.md           # Esta documentación
 ├── requirements.txt        # Dependencias de Python
 ├── setup_instructions.txt  # Instrucciones adicionales de configuración
-├── output/                 # Directorio para archivos de salida
-│   ├── api_assestment.txt  # Evaluación de la API
-│   └── ...                 # Archivos de resultados (.json, .csv, .ods)
 └── tests/                  # Pruebas del sistema ETL
     ├── test_api.py         # Pruebas de integración con la API
     └── ...                 # Pruebas adicionales

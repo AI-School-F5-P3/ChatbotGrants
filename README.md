@@ -156,7 +156,6 @@ ChatbotGrants/
     ├── Dockerfile              # ETL container definition
     ├── requirements.txt        # ETL dependencies
     ├── README.md               # ETL documentation
-    ├── output/                 # Directory for ETL output files
     └── tests/                  # ETL test directory
 ```
 
